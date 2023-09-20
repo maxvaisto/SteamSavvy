@@ -6,6 +6,7 @@ import requests
 import json
 import pandas
 import time
+import numpy
 import matplotlib.pyplot as plt
 from pandas.core.dtypes.common import is_numeric_dtype
 
@@ -22,6 +23,7 @@ def get_all_data(iterations: int = 100, num_threads: int = 4):
         steam_api_data = get_additional_game_data_steam(str(id))
         steamspy_api_data = get_additional_game_data_steamspy(str(id))
         return steam_api_data, steamspy_api_data
+
     # def get_additional_game_data_steam_threaded(id):
     #     return get_additional_game_data_steam(str(id))
     # def get_additional_game_data_steamspy_threaded(id):
@@ -60,43 +62,66 @@ def get_all_data(iterations: int = 100, num_threads: int = 4):
 
 
 def get_additional_game_data_steam(id):
-    url = STEAM_GAME_INFO_URL + id + STEAM_API_LANGUAGE
-
-    response = json.loads(requests.get(url).text)
-    print(datetime.datetime.now())
     fails = 0
     base_wait = 60
-    while not response or response[id]["success"] == False:
-        # This part is meant to catch
-        if response and response[id]["success"] == False:
+    url = STEAM_GAME_INFO_URL + id + STEAM_API_LANGUAGE
+
+    response = None
+    json_str = requests.get(url).text
+    json_load_error = False
+    try:
+        response = json.loads(requests.get(url).text)
+    except Exception as ex:
+        print("Error occurred while parsing json from Steam:", ex)
+        json_load_error = True
+    print(datetime.datetime.now())
+
+    while (not response or response[id]["success"] == False) or json_load_error:
+        # This part is meant to catch erros in the loading process
+        if (response and response[id]["success"] == False) or json_load_error:
             fails += 1
+            json_load_error = False
             if fails >= 10:
-                return pandas.Series({'platforms': [], 'release_date': "", 'categories': []})
+                return pandas.Series({'platforms': numpy.NaN, 'release_date': numpy.NaN, 'categories': numpy.NaN})
         print("Failed queries for", id, "is", fails)
         time.sleep(base_wait)
-        response = json.loads(requests.get(url).text)
-
+        try:
+            response = json.loads(requests.get(url).text)
+        except Exception as ex:
+            print("Error occurred while parsing json from Steam:", ex)
+            json_load_error = True
 
     data = response[id]["data"]
     if data["type"] != "game":
         print("Non game found", data["name"])
     platforms = [platform for (platform, enabled) in data["platforms"].items() if enabled]
     release_date = data["release_date"]["date"]
-    categories = [category_data["description"] for category_data in data["categories"]] if "categories" in data.keys() else []
+    categories = [category_data["description"] for category_data in
+                  data["categories"]] if "categories" in data.keys() else []
     return_values = pandas.Series({'platforms': platforms, 'release_date': release_date, 'categories': categories})
     return return_values
 
 
 def get_additional_game_data_steamspy(id):
     url = STEAM_SPY_GAME_INFO + id
+    response = None
+    fails = 0
+    while not response:
+        try:
+            response = json.loads(requests.get(url).text)
+        except Exception as ex:
+            print("Error occurred while parsing json from Steam:", ex)
+            fails += 1
+            if fails >= 10:
+                return pandas.Series({"ccu": numpy.NaN, 'languages': numpy.NaN, 'genres': numpy.NaN, "tags": numpy.NaN})
+
     response = json.loads(requests.get(url).text)
-    # tags = [tag for (tag,tag_id) in response["tags"]]
     languages = response["languages"].split(", ")
     genres = response["genre"]
     ccu = response["ccu"]
     tags = [tag for (tag, tag_id) in response["tags"].items()] if response["tags"] else []
 
-    return_values = dict(ccu=ccu, languages=languages, genres=genres, tags=tags)
+    return_values = pandas.Series(dict(ccu=ccu, languages=languages, genres=genres, tags=tags))
     return return_values
 
 
@@ -148,7 +173,7 @@ def price_to_dollars(convert_df):
 
 
 if __name__ == "__main__":
-    df = get_all_data()
+    df = get_all_data(2)
     df = add_user_rating(df)
     df = replace_owner_number_with_symbol(df)
     df = price_to_dollars(df)
