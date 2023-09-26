@@ -1,6 +1,5 @@
 import numpy
 import pandas
-from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
 
