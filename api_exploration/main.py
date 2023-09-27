@@ -179,8 +179,9 @@ def create_hist_plots(df):
 
 def replace_owner_number_with_symbol(df):
     def owner_strip(user_range: str):
-        user_range = user_range.replace(",000,000", " M")
-        user_range = user_range.replace(",000", " k")
+        if isinstance(user_range, str):
+            user_range = user_range.replace(",000,000", " M")
+            user_range = user_range.replace(",000", " k")
         return user_range
 
     df["owners"] = df["owners"].apply(lambda name: owner_strip((name)))

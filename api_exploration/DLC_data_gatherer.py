@@ -83,14 +83,17 @@ if __name__ == "__main__":
     dlc_path = "dlc_segments"
     path = "file_segments"
     files = os.listdir(path)
-    for i, file_name in enumerate(files):
-        data = pandas.read_csv(os.path.join(os.getcwd(), path, file_name), index_col=0)
-        # data = data.iloc[0:10] # for testing
-        full_df = get_dlc_for_df(data)
-        full_df = replace_owner_number_with_symbol(full_df)
-        file_name = "".join(["dlc_data", "_", str(i), ".csv"])
-        file_path = os.path.join(os.getcwd(), dlc_path, file_name)
+    files.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
+    get_values = [int(''.join(filter(str.isdigit, f))) for f in files]
+    for file_index, file_name in zip(get_values, files):
+        if file_index not in [0, 1, 10, 11, 12]:
+            data = pandas.read_csv(os.path.join(os.getcwd(), path, file_name), index_col=0)
+            # data = data.iloc[0:10] # for testing
+            full_df = get_dlc_for_df(data)
+            full_df = replace_owner_number_with_symbol(full_df)
+            file_name = "".join(["dlc_data", "_", str(file_index), ".csv"])
+            file_path = os.path.join(os.getcwd(), dlc_path, file_name)
 
-        full_df.to_csv(file_path)
-        print(f"Saved file {file_name}!")
+            full_df.to_csv(file_path)
+            print(f"Saved file {file_name}!")
     pass
