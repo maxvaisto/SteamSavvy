@@ -1,11 +1,26 @@
 
-from typing import Sequence, Optional
+from typing import Sequence, Optional, Any
 import pandas
 
 DEFAULT_ILLEGAL_CONTINUATIONS = {"INC.", "LLC", "CO.", "LTD.", "S.R.O."}
 
+def get_owner_means(owner_limits: Sequence[Any]):
 
+    if not isinstance(owner_limits, list):
+        return owner_limits
+    else:
+        return (owner_limits[0]+owner_limits[1])/2
 
+def convert_owners_to_limits(owner_limit):
+    if not isinstance(owner_limit, str):
+        return owner_limit
+    owners_raw = [rev.replace(" ", "") for rev in owner_limit.split(" .. ")]
+    owners_clean = []
+    for owner_limit in owners_raw:
+        owner_limit = owner_limit.replace("M", "0"*6)
+        owner_limit = owner_limit.replace("k", "0"*3)
+        owners_clean.append(int(owner_limit))
+    return owners_clean
 def split_companies(arr, illegal_continuations: Optional[Sequence[str]] = None):
     """
     Splits the given string at comma sign as long as following the comma none of the illegal
@@ -44,3 +59,13 @@ def split_companies(arr, illegal_continuations: Optional[Sequence[str]] = None):
             results_list.append(arr[start_index:index + 1].strip())
 
     return results_list
+
+
+def extract_unique_companies(nested_companies):
+    full_company_list = [dev for company_list in nested_companies
+                         if isinstance(company_list, list) for dev in company_list]
+    unique_companies = []
+    for company in full_company_list:
+        if company not in unique_companies:
+            unique_companies.append(company)
+    return unique_companies
