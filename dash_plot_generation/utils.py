@@ -6,7 +6,7 @@ DEFAULT_ILLEGAL_CONTINUATIONS = {"INC.", "LLC", "CO.", "LTD.", "S.R.O."}
 
 
 
-def split_developers(arr, illegal_continuations: Optional[Sequence[str]] = None):
+def split_companies(arr, illegal_continuations: Optional[Sequence[str]] = None):
     """
     Splits the given string at comma sign as long as following the comma none of the illegal
     continuations happen. In such a case, the string split does not happen that said comma.
