@@ -1,10 +1,9 @@
-import math
-from typing import List, Sequence, Optional
 
-import numpy
+from typing import Sequence, Optional
 import pandas
 
 DEFAULT_ILLEGAL_CONTINUATIONS = {"INC.", "LLC", "CO.", "LTD.", "S.R.O."}
+
 
 
 def split_developers(arr, illegal_continuations: Optional[Sequence[str]] = None):
@@ -39,9 +38,9 @@ def split_developers(arr, illegal_continuations: Optional[Sequence[str]] = None)
                         found_illegal = True
                         break
                 if not found_illegal:
-                    results_list.append(arr[start_index:index])
+                    results_list.append(arr[start_index:index].strip())
                     start_index = index + 1
         elif index == len(arr) - 1:
-            results_list.append(arr[start_index:index + 1])
+            results_list.append(arr[start_index:index + 1].strip())
 
     return results_list
