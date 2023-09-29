@@ -211,7 +211,7 @@ def plot_statistics_data(df):
     plt.show()
 
 
-def combine_main_data(path):
+def combine_and_save_dataframes_in_dir(path, output_file_name):
     files = os.listdir(path)
     files.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
     df = None
@@ -219,13 +219,12 @@ def combine_main_data(path):
         df = pandas.concat([df, pandas.read_csv(os.path.join(os.getcwd(), path, file_name), index_col=0)], axis=0,
                            ignore_index=True) if df is not None \
             else pandas.read_csv(os.path.join(os.getcwd(), path, file_name), index_col=0)
-    df.to_csv("full_data.csv")
-    df.to_json("full_data.json")
+    df.to_csv(output_file_name + ".csv")
+    df.to_json(output_file_name + ".json")
 
 if __name__ == "__main__":
 
     path = "file_segments"
-    combine_main_data(path)
 
     for i in range(0, 68):
         df = get_all_data(iterations=[i])
