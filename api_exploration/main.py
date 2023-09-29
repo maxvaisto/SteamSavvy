@@ -162,7 +162,8 @@ def add_user_rating(df):
 
 
 def price_to_dollars(convert_df):
-    convert_df["price"] = convert_df["price"].apply(lambda val: int(val) / 100 if int(val) != 0 else 0)
+
+    convert_df["price"] = convert_df["price"].apply(lambda val: int(val) / 100 if (val and int(val) != 0) else 0)
     return convert_df
 
 
@@ -210,11 +211,24 @@ def plot_statistics_data(df):
     plt.show()
 
 
+def combine_main_data(path):
+    files = os.listdir(path)
+    files.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
+    df = None
+    for file_name in files:
+        df = pandas.concat([df, pandas.read_csv(os.path.join(os.getcwd(), path, file_name), index_col=0)], axis=0,
+                           ignore_index=True) if df is not None \
+            else pandas.read_csv(os.path.join(os.getcwd(), path, file_name), index_col=0)
+    df.to_csv("full_data.csv")
+    df.to_json("full_data.json")
+
 if __name__ == "__main__":
 
-    for i in range(0, 67):
+    path = "file_segments"
+    combine_main_data(path)
+
+    for i in range(0, 68):
         df = get_all_data(iterations=[i])
-        path = "file_segments"
         df = add_user_rating(df)
         df = replace_owner_number_with_symbol(df)
         df = price_to_dollars(df)
