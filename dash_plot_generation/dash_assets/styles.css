@@ -1,0 +1,23 @@
+/* Set the border to a hard rectangular shape */
+.dash-dropdown .Select-control {
+    border: 2px solid rgb(37, 55, 77);
+    border-radius: 4px;
+}
+
+/* Set the background color for the closed dropdown */
+.dash-dropdown .Select-control {
+    background-color: rgb(50, 70, 101);
+}
+.dash-dropdown.is-minimized .Select-value-label {
+    color: rgb(235, 235, 235);
+}
+/* Set the text color */
+.dash-dropdown .Select-value-label {
+    color: rgb(235, 235, 235);
+
+}
+
+/* Set the background color for the open dropdown */
+.dash-dropdown .Select-menu-outer {
+    background-color: rgb(50, 70, 101);
+}
