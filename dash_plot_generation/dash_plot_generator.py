@@ -98,9 +98,9 @@ def update_dev_info(dev_name):
     ccu = sum(dev_data["ccu"])
     dev_data["owner_means"] = dev_data["owners"].apply(lambda x: get_owner_means(convert_owners_to_limits(x)))
     dev_data["game_prices"] = dev_data["price"]
-    dev_data["game_revenue"] = dev_data.apply(lambda x: x["owner_means"]*x["game_prices"] if
-                                                not (pandas.isna(x["owner_means"]) or pandas.isna(x["game_prices"]))
-                                                else 0, axis=1)
+    dev_data["game_revenue"] = dev_data.apply(lambda x: x["owner_means"] * x["game_prices"] if
+    not (pandas.isna(x["owner_means"]) or pandas.isna(x["game_prices"]))
+    else 0, axis=1)
     # dev_data["game_revenue"] = pandas.Series([owner_count * game_price for (owner_count, game_price) in
     #                                           zip(dev_data["owner_means"], dev_data["game_prices"]) if
     #                                           not (pandas.isna(game_price) or pandas.isna(owner_count))])
@@ -113,7 +113,8 @@ def update_dev_info(dev_name):
     dev_top_genre_labels = ", ".join([genre_c[0] for genre_c in genre_counts])
     dev_ccu = str(ccu)
     dev_game_count = str(dev_data.shape[0])
-    dev_game_revenue_per_game = str(int(round(numpy.nansum(dev_data["game_revenue"]) / len(dev_data["game_revenue"]), -1)))
+    dev_game_revenue_per_game = str(
+        int(round(numpy.nansum(dev_data["game_revenue"]) / len(dev_data["game_revenue"]), -1)))
     dev_top_games_label = ", ".join(top_games)
 
     return dev_revenue, dev_top_genre_labels, dev_ccu, dev_game_count, dev_game_revenue_per_game, dev_top_games_label
@@ -133,9 +134,9 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
     global APP, df
 
     # unique_publishers = extract_unique_companies(df["publisher"].apply(lambda x: split_companies(x)))
-    unique_developers = extract_unique_companies(df["developer"].iloc[0:10].apply(lambda x: split_companies(x)))
+    # unique_developers = extract_unique_companies(df["developer"].iloc[0:10].apply(lambda x: split_companies(x)))
     unique_publishers = ["Valve"]
-    # unique_developers = ["Valve"]
+    unique_developers = ["Valve"]
 
     APP.css.append_css({
         'external_url': 'styles.css'
@@ -143,7 +144,8 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
     APP.layout = html.Div(
         children=[
             html.Nav(className="nav nav-pills", children=[
-                html.H6("SteamSavvy - Steam game data insights", style={"margin-left": "30px", "width": "20%", "display": "inline-block"}),
+                html.H6("SteamSavvy - Steam game data insights",
+                        style={"margin-left": "30px", "width": "20%", "display": "inline-block"}),
                 html.A('About', className="nav-item nav-link btn", href='/apps/App1',
                        style={"margin-left": "300px"}),
                 html.A('Technical report', className="nav-item nav-link active btn", href='/apps/App2',
@@ -163,6 +165,20 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                                 style=TAB_NORMAL_DICT, selected_style=TAB_HIGHLIGHT_DICT),
                     ],
                              style=DEFAULT_TABS_DICT),
+                    html.Div(children=[html.Div(style=SMALL_PANEL_DICT | {'width': '60%', 'height': '100%', 'margin-right': '5%'},
+                                                children=[dcc.Graph(
+                                                    figure={
+
+                                                        'data': [
+                                                            {'x': ["Action", "Adventure", "RPG", "Puzzle", "Strategy"],
+                                                             'y': [0.7, 0.4, 0.8, 1.2, 1.3],
+                                                                'type': 'bar'}
+                                                        ]
+                                                    }
+                                                )]),
+                                       html.Div(style=SMALL_PANEL_DICT | {'width': '35%', 'height': '100%'})],
+                             style={'display': 'flex', 'flex-flow': 'row', 'flex-grow': '1', 'height': '88%',
+                                    'width': '100%', 'margin': '0'})
                 ], style=PANEL_DEFAULT_DICT | {'width': 'calc(60% - 10px)', 'height': '600px',
                                                'margin-right': '100px', 'margin-bottom': '50px'
                                                }),
