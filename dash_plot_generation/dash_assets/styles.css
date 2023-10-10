@@ -10,7 +10,9 @@ html, body {
   position: relative;
 }
 
-
+.ag-theme-custom-dark {
+    --ag-background-color: #ddd !important;
+}
 
 .dash-dropdown .Select-control {
     border: 2px solid rgb(37, 55, 77);
@@ -41,6 +43,6 @@ html, body {
     border-bottom: 2px solid rgb(37,55,77);
 }
 
-.main-svg{
-
+.dark_plot{
+    background-color: black;
 }

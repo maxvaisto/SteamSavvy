@@ -8,6 +8,8 @@ from collections import Counter
 from dash_plot_generation.utils import split_companies, extract_unique_companies, convert_owners_to_limits, \
     get_owner_means
 from dash.exceptions import PreventUpdate
+import plotly.graph_objects as go
+import plotly.express as px
 
 DARK_STEAM = "rgb(23,29,37)"
 WHITE_STEAM = "rgb(235,235,235)"
@@ -57,9 +59,11 @@ PUB_REV_PER_GAME_LABEL = "pub_rev_per_game"
 PUB_REVENUE_LABEL = "pub_revenue"
 
 PUB_TOP_GAMES = "pub_top_games"
-
+DEMO_PLOT_LABELS = ["Action", "Adventure", "RPG", "Puzzle", "Strategy", "Other"]
+DEMO_PLOT_COLORS = list(zip(DEMO_PLOT_LABELS, px.colors.qualitative.G10))
 csv_path = os.path.normpath(os.getcwd() + os.sep + os.pardir + os.sep + "api_exploration")
 split_csv_path = os.path.join(csv_path, "file_segments")
+# steam_dark_template = dict(layout=go.Layout(title_font))
 
 df = None
 DASH_ASSETS_PATH = "dash_assets"
@@ -131,7 +135,7 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
         number but replace the IP address with your local network IP instead.
     """
 
-    global APP, df
+    global APP, df, DEMO_PLOT_COLORS, DEMO_PLOT_LABELS
 
     # unique_publishers = extract_unique_companies(df["publisher"].apply(lambda x: split_companies(x)))
     # unique_developers = extract_unique_companies(df["developer"].iloc[0:10].apply(lambda x: split_companies(x)))
@@ -165,22 +169,60 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                                 style=TAB_NORMAL_DICT, selected_style=TAB_HIGHLIGHT_DICT),
                     ],
                              style=DEFAULT_TABS_DICT),
-                    html.Div(children=[html.Div(style=SMALL_PANEL_DICT | {'width': '60%', 'height': '100%', 'margin-right': '5%'},
-                                                children=[dcc.Graph(
-                                                    figure={
+                    html.Div(children=[
+                        html.Div(style=SMALL_PANEL_DICT | {'width': '60%', 'height': '100%', 'margin-right': '5%',
+                                                           'padding-left': '5%',
+                                                           'background-color': TAB_COLOR},
+                                 children=[dcc.Graph(
+                                     figure=go.Figure(data=[
+                                         {'x': ["Action", "Adventure", "RPG", "Puzzle", "Strategy"],
+                                          'y': [0.7, 0.4, 0.8, 1.2, 1.3],
+                                          'type': 'bar'},
+                                     ],
+                                         layout=dict(template="plotly_dark",
+                                                     title="Relative genre perfomance",
+                                                     plot_bgcolor=TAB_COLOR,
+                                                     paper_bgcolor=TAB_COLOR)),
 
-                                                        'data': [
-                                                            {'x': ["Action", "Adventure", "RPG", "Puzzle", "Strategy"],
-                                                             'y': [0.7, 0.4, 0.8, 1.2, 1.3],
-                                                                'type': 'bar'}
-                                                        ]
-                                                    }
-                                                )]),
-                                       html.Div(style=SMALL_PANEL_DICT | {'width': '35%', 'height': '100%'})],
-                             style={'display': 'flex', 'flex-flow': 'row', 'flex-grow': '1', 'height': '88%',
-                                    'width': '100%', 'margin': '0'})
-                ], style=PANEL_DEFAULT_DICT | {'width': 'calc(60% - 10px)', 'height': '600px',
-                                               'margin-right': '100px', 'margin-bottom': '50px'
+                                     ),
+                                     html.P(f"""Genre performance measures the assessed exploitability of the 
+                                        specific game genre. The assesment is done by estimating the genre popularity,
+                                        and games developed in the next two years and showing the relative differences
+                                        between the genres.""")]),
+                        html.Div(style=SMALL_PANEL_DICT | {'width': '35%', 'height': '100%',
+                                                           'background-color': TAB_COLOR},
+                                 children=[
+                                     html.Div(style={'width': '100%', 'height': '50%'},
+                                              children=[dcc.Graph(
+                                                  figure=go.Figure(data=[go.Pie(
+                                                      labels=["Action", "Adventure", "RPG", "Puzzle", "Strategy", "Other"],
+                                                      values=[0.8, 0.3, 0.4, 0.4, 0.3, 0.55],
+                                                      sort=False)],
+                                                      layout=dict(template="plotly_dark",
+                                                                  title="Genre popularity",
+                                                                  plot_bgcolor=TAB_COLOR,
+                                                                  paper_bgcolor=TAB_COLOR,
+                                                                  margin=dict(l=20, r=20, t=50, b=20))),
+                                                  style={'width': '100%', 'height': '100%'})]),
+                                     html.Div(style={'width': '100%', 'height': '50%'},
+                                              children=[dcc.Graph(
+                                                  figure=go.Figure(data=[go.Pie(
+                                                      labels=["Action", "Adventure", "RPG", "Puzzle", "Strategy",
+                                                              "Other"],
+                                                      values=[0.7, 0.5, 0.1, 0.4, 0.3, 0.7],
+                                                      sort=False,)],
+                                                      layout=dict(template="plotly_dark",
+                                                                  title="Genre revenue share",
+                                                                  plot_bgcolor=TAB_COLOR,
+                                                                  paper_bgcolor=TAB_COLOR,
+                                                                  margin=dict(l=20, r=20, t=50, b=20))),
+                                                  style={'width': '100%', 'height': '100%'})]
+                                              )])],
+                        style={'height': '88%', 'width': '100%', 'margin': '0'})
+                ], style=PANEL_DEFAULT_DICT | {'width': 'calc(45% - 10px)', 'height': '600px',
+                                               'margin-right': '100px','padding-left': '4%',
+                                                           'padding-right': '4%', 'padding-bottom': '4%',
+                                                           'padding-top':'3%', 'margin-bottom': '20px'
                                                }),
                 html.Div(children=[
                     dcc.Tabs(id="tabs_main_plots2", value="tab3", children=[
@@ -193,9 +235,8 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                                              className='dash-dropdown',  # Add the CSS class here
                                              ),
                                 html.Div(children=[
-                                    html.H6("General statistics"),
                                     html.Div(  # Revenue
-                                        children=[html.P("Revenue estimates:"),
+                                        children=[html.P("Revenue estimates"),
                                                   html.Div(children=[
                                                       html.Div(children=[
                                                           html.P("Total game sale revenue"),
@@ -239,7 +280,11 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                     ],
                              style=DEFAULT_TABS_DICT),
                 ],
-                    style=PANEL_DEFAULT_DICT | {'width': 'calc(30% - 10px)', 'height': '600px', 'margin-right': '4%'})
+                    style=PANEL_DEFAULT_DICT | {'width': 'calc(30% - 10px)', 'height': '600px', 'margin-right': '4%',
+                                                'padding-left': '3%',
+                                                'padding-right': '3%', 'padding-bottom': '4%',
+                                                'padding-top': '3%', 'margin-bottom': '20px'
+                                                })
             ],
                      style={'width': '100%', "padding-top": "15px", 'padding-left': "50px"}),
         ],
