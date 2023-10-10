@@ -88,9 +88,9 @@ def replace_owner_number_with_symbol(df):
 
 def replace_owner_number_with_symbol_real_numeric(value):
     value_str = str(value)
-    value_str = re.sub("0" * 9 + "$", " B", value_str)
-    value_str = re.sub("0" * 6 + "$", " M", value_str)
-    value_str = re.sub("0" * 3 + "$", " k", value_str)
+    value_str = re.sub("0" * 9 + "$", " billion", value_str)
+    value_str = re.sub("0" * 6 + "$", " million", value_str)
+    # value_str = re.sub("0" * 3 + "$", " thousand", value_str)
     return value_str
 
 

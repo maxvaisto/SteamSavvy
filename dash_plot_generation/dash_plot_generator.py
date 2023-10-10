@@ -128,13 +128,13 @@ def update_dev_info(dev_name):
     genre_counts = Counter(genre_totals).most_common(3)
     top_games = dev_data.sort_values(by=["game_revenue"], ascending=False)["name"].head(3)
     # top_genres = dict(sorted(genre_totals.items(), key=lambda x: x[1], reverse=True)[:4])
-    dev_revenue = replace_owner_number_with_symbol_real_numeric(round_to_three_largest_digits(
+    dev_revenue = "$" + replace_owner_number_with_symbol_real_numeric(round_to_three_largest_digits(
                         int(round(numpy.nansum(dev_data["game_revenue"]), -1))))
     dev_top_genre_labels = html.Div("\n".join([genre_c[0] for genre_c in genre_counts]),
                                     style={'white-space': 'pre-line', 'padding-left': '5%'})
     dev_ccu = replace_owner_number_with_symbol_real_numeric(round_to_three_largest_digits(ccu))
     dev_game_count = str(dev_data.shape[0])
-    dev_game_revenue_per_game = replace_owner_number_with_symbol_real_numeric(round_to_three_largest_digits(
+    dev_game_revenue_per_game = "$" + replace_owner_number_with_symbol_real_numeric(round_to_three_largest_digits(
         int(round(numpy.nansum(dev_data["game_revenue"]) / len(dev_data["game_revenue"]), -1))))
     dev_top_games_label = html.Div("\n".join(top_games), style={'white-space': 'pre-line', 'padding-left': '5%'})
     user_rating_value = str(round(100*dev_data["Review_rating"].mean())) + "%"
