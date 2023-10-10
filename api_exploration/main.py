@@ -11,6 +11,8 @@ import numpy
 import matplotlib.pyplot as plt
 from pandas.core.dtypes.common import is_numeric_dtype
 
+from dash_plot_generation.utils import replace_owner_number_with_symbol_real_numeric
+
 STEAMSPY_ALL_GAMES_URL = "https://steamspy.com/api.php?request=all&page="
 STEAM_GAME_INFO_URL = "https://store.steampowered.com/api/appdetails?appids="
 STEAM_API_LANGUAGE = "&l=english"
@@ -178,17 +180,6 @@ def create_hist_plots(df):
             plt.show()
 
 
-def replace_owner_number_with_symbol(df):
-    def owner_strip(user_range: str):
-        if isinstance(user_range, str):
-            user_range = user_range.replace(",000,000", " M")
-            user_range = user_range.replace(",000", " k")
-        return user_range
-
-    df["owners"] = df["owners"].apply(lambda name: owner_strip((name)))
-    return df
-
-
 def create_heat_maps(df, plot_pairs):
     for (x, y) in plot_pairs:
         plt.figure()  # Create a new figure for each heatmap
@@ -229,7 +220,7 @@ if __name__ == "__main__":
     for i in range(0, 68):
         df = get_all_data(iterations=[i])
         df = add_user_rating(df)
-        df = replace_owner_number_with_symbol(df)
+        df = replace_owner_number_with_symbol_real_numeric(df)
         df = price_to_dollars(df)
         file_name = "".join(["game_data", "_", str(i), ".csv"])
         file_path = os.path.join(os.getcwd(), path, file_name)

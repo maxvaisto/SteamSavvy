@@ -6,10 +6,15 @@ import pandas
 from dash import dash, dcc, html, Output, Input
 from collections import Counter
 from dash_plot_generation.utils import split_companies, extract_unique_companies, convert_owners_to_limits, \
-    get_owner_means
+    get_owner_means, round_to_three_largest_digits, replace_owner_number_with_symbol_real_numeric
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
 import plotly.express as px
+
+DEV_AVERAGE_RATING_LABEL = "dev_average_rating"
+
+RIGHT_SIDE_TEXT_DICT = {'display': 'inline-block',
+                        'float': 'right', 'margin-right': '10%'}
 
 DARK_STEAM = "rgb(23,29,37)"
 WHITE_STEAM = "rgb(235,235,235)"
@@ -35,8 +40,17 @@ PANEL_DEFAULT_DICT = {'display': 'inline-block',
                       'color': WHITE_STEAM}
 SMALL_PANEL_DICT = {'float': 'left', 'background-color': SMALL_PANEL_COLOR, 'box-sizing': 'border-box',
                     'padding': '10px'}
+SMALL_TAB_PANEL_DICT = SMALL_PANEL_DICT | {'width': '48%', 'height': '100%',
+                                           'margin-bottom': '50px',
+                                           'padding-top': '4%', 'padding-bottom': '5%', 'padding-left': '5%',
+                                           'padding-right': '5%',
+                                           'margin-top': '20px'
+                                           }
+SMALL_PANEL_HEADER_DICT = {'text-align': 'center', 'padding-top': '5%', 'padding-bottom': '2%'}
 
 DEV_TOP_GENRES_LABEL = "dev_top_genres"
+
+LIST_DICT = {'display': 'inline-block'}
 
 DEV_CCU_LABEL = "dev_ccu"
 
@@ -91,7 +105,8 @@ def initialize_data():
                Output(DEV_CCU_LABEL, "children"),
                Output(DEV_GAME_COUNT_LABEL, "children"),
                Output(DEV_REV_PER_GAME_LABEL, "children"),
-               Output(DEV_TOP_GAMES, "children")],
+               Output(DEV_TOP_GAMES, "children"),
+               Output(DEV_AVERAGE_RATING_LABEL, "children")],
               inputs=[Input(DEVELOPER_DROPDOWN, "value")])
 def update_dev_info(dev_name):
     global df
@@ -113,15 +128,18 @@ def update_dev_info(dev_name):
     genre_counts = Counter(genre_totals).most_common(3)
     top_games = dev_data.sort_values(by=["game_revenue"], ascending=False)["name"].head(3)
     # top_genres = dict(sorted(genre_totals.items(), key=lambda x: x[1], reverse=True)[:4])
-    dev_revenue = str(int(round(numpy.nansum(dev_data["game_revenue"]), -1)))
-    dev_top_genre_labels = ", ".join([genre_c[0] for genre_c in genre_counts])
-    dev_ccu = str(ccu)
+    dev_revenue = replace_owner_number_with_symbol_real_numeric(round_to_three_largest_digits(
+                        int(round(numpy.nansum(dev_data["game_revenue"]), -1))))
+    dev_top_genre_labels = html.Div("\n".join([genre_c[0] for genre_c in genre_counts]),
+                                    style={'white-space': 'pre-line', 'padding-left': '5%'})
+    dev_ccu = replace_owner_number_with_symbol_real_numeric(round_to_three_largest_digits(ccu))
     dev_game_count = str(dev_data.shape[0])
-    dev_game_revenue_per_game = str(
-        int(round(numpy.nansum(dev_data["game_revenue"]) / len(dev_data["game_revenue"]), -1)))
-    dev_top_games_label = ", ".join(top_games)
-
-    return dev_revenue, dev_top_genre_labels, dev_ccu, dev_game_count, dev_game_revenue_per_game, dev_top_games_label
+    dev_game_revenue_per_game = replace_owner_number_with_symbol_real_numeric(round_to_three_largest_digits(
+        int(round(numpy.nansum(dev_data["game_revenue"]) / len(dev_data["game_revenue"]), -1))))
+    dev_top_games_label = html.Div("\n".join(top_games), style={'white-space': 'pre-line', 'padding-left': '5%'})
+    user_rating_value = str(round(100*dev_data["Review_rating"].mean())) + "%"
+    return dev_revenue, dev_top_genre_labels, dev_ccu, dev_game_count, dev_game_revenue_per_game, dev_top_games_label, \
+        user_rating_value
 
 
 def initialize_dash(host: str = "0.0.0.0", **kwargs):
@@ -184,7 +202,7 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                                                      plot_bgcolor=TAB_COLOR,
                                                      paper_bgcolor=TAB_COLOR)),
 
-                                     ),
+                                 ),
                                      html.P(f"""Genre performance measures the assessed exploitability of the 
                                         specific game genre. The assesment is done by estimating the genre popularity,
                                         and games developed in the next two years and showing the relative differences
@@ -195,7 +213,8 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                                      html.Div(style={'width': '100%', 'height': '50%'},
                                               children=[dcc.Graph(
                                                   figure=go.Figure(data=[go.Pie(
-                                                      labels=["Action", "Adventure", "RPG", "Puzzle", "Strategy", "Other"],
+                                                      labels=["Action", "Adventure", "RPG", "Puzzle", "Strategy",
+                                                              "Other"],
                                                       values=[0.8, 0.3, 0.4, 0.4, 0.3, 0.55],
                                                       sort=False)],
                                                       layout=dict(template="plotly_dark",
@@ -210,7 +229,7 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                                                       labels=["Action", "Adventure", "RPG", "Puzzle", "Strategy",
                                                               "Other"],
                                                       values=[0.7, 0.5, 0.1, 0.4, 0.3, 0.7],
-                                                      sort=False,)],
+                                                      sort=False, )],
                                                       layout=dict(template="plotly_dark",
                                                                   title="Genre revenue share",
                                                                   plot_bgcolor=TAB_COLOR,
@@ -220,9 +239,9 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                                               )])],
                         style={'height': '88%', 'width': '100%', 'margin': '0'})
                 ], style=PANEL_DEFAULT_DICT | {'width': 'calc(45% - 10px)', 'height': '600px',
-                                               'margin-right': '100px','padding-left': '4%',
-                                                           'padding-right': '4%', 'padding-bottom': '4%',
-                                                           'padding-top':'3%', 'margin-bottom': '20px'
+                                               'margin-right': '100px', 'padding-left': '4%',
+                                               'padding-right': '4%', 'padding-bottom': '4%',
+                                               'padding-top': '3%', 'margin-bottom': '20px'
                                                }),
                 html.Div(children=[
                     dcc.Tabs(id="tabs_main_plots2", value="tab3", children=[
@@ -236,34 +255,79 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                                              ),
                                 html.Div(children=[
                                     html.Div(  # Revenue
-                                        children=[html.P("Revenue estimates"),
-                                                  html.Div(children=[
-                                                      html.Div(children=[
-                                                          html.P("Total game sale revenue"),
-                                                          html.Small(id=DEV_REVENUE_LABEL, children="524.245.000€"),
-                                                          html.P("Average game sale revenue"),
-                                                          html.Small(id=DEV_REV_PER_GAME_LABEL, children="92.625.000€"),
-                                                          html.P("Highest game sale revenue games:"),
-                                                          html.Small(id=DEV_TOP_GAMES, children="Half life 2"),
-                                                      ]),
-                                                  ])
-                                                  ],
-                                        style=SMALL_PANEL_DICT | {'width': '48%', 'height': '100%',
-                                                                  'margin-right': '20px', 'margin-bottom': '50px'}
+                                        children=[
+                                            html.Div(
+                                                children=[html.P("Revenue", style=SMALL_PANEL_HEADER_DICT)],
+                                                style={'margin-bottom': '10%',
+                                                       'border-bottom': '2px solid ' + TAB_EDGE}),
+                                            html.Div(children=[
+                                                html.Div(children=[
+                                                    html.P("Game sale revenue estimates"),
+                                                    html.Div(children=[
+                                                        html.Div(children=[
+                                                            html.P("Total: ", style=LIST_DICT | {'padding-left': '5%'}),
+                                                            html.P(id=DEV_REVENUE_LABEL, children="$524 M",
+                                                                       style=RIGHT_SIDE_TEXT_DICT)
+                                                        ]),
+                                                        html.Div(children=[
+                                                            html.P("Game average:",
+                                                                   style=LIST_DICT | {'padding-left': '5%'}),
+                                                            html.P(id=DEV_REV_PER_GAME_LABEL, children="$925 M",
+                                                                       style=RIGHT_SIDE_TEXT_DICT)
+                                                        ])
+                                                    ],
+                                                        style={'margin-bottom': '10px'}),
+                                                    html.Div(children=[
+                                                        html.P("Top games by revenue:"),
+                                                        html.Small(id=DEV_TOP_GAMES, children="Half life 2"),
+                                                    ])
+                                                ]),
+                                            ], style={'padding-left': '5%', 'padding-right': '5%',
+                                                      'padding-bottom': '5%'})
+                                        ],
+                                        style=SMALL_TAB_PANEL_DICT | {'margin-right': '20px'}
                                     ),
                                     html.Div(children=[
-                                        html.Div(children=[
-                                            html.P("Number of games", className="game-info"),
-                                            html.Small(id=DEV_GAME_COUNT_LABEL, children="5", className="game-info"),
-                                            html.P("Number of concurrent users", className="game-info"),
-                                            html.Small(id=DEV_CCU_LABEL, children="92.625.000€", className="game-info"),
-                                            html.P("Most common game genres", className="game-info"),
-                                            html.Small(id=DEV_TOP_GENRES_LABEL, children="FPS, Action, Puzzle",
-                                                       className="game-info"),
-                                            html.P("Average game rating", className="game-info"),
-                                        ])
+                                        html.Div(
+                                            children=[
 
-                                    ], style=SMALL_PANEL_DICT | {'width': '48%', 'height': '100%'}
+                                                html.Div(
+                                                    children=[html.P("General information",
+                                                                     style=SMALL_PANEL_HEADER_DICT)],
+                                                    style={'margin-bottom': '30px',
+                                                           'border-bottom': '2px solid ' + TAB_EDGE}),
+                                                html.Div(children=[
+                                                    html.Div(children=[
+                                                        html.P("Number of games:", style=LIST_DICT),
+                                                        html.P(id=DEV_GAME_COUNT_LABEL, children="5",
+                                                                   style=RIGHT_SIDE_TEXT_DICT),
+                                                    ],
+                                                        style={'margin-bottom': '10px'}
+                                                    ),
+                                                    html.Div(children=[
+                                                        html.P("Concurrent users:", style=LIST_DICT),
+                                                        html.P(id=DEV_CCU_LABEL, children="92.625.000€",
+                                                                   style=RIGHT_SIDE_TEXT_DICT),
+                                                    ],
+                                                        style={'margin-bottom': '10px'}
+                                                    ),
+                                                    html.Div(children=[
+                                                        html.P("Most common game genres:"),
+                                                        html.Small(id=DEV_TOP_GENRES_LABEL,
+                                                                   children="FPS, Action, Puzzle"),
+                                                    ],
+                                                        style={'margin-bottom': '10px'}
+                                                    ),
+                                                    html.Div(children=[
+                                                        html.P("Average game rating", style=LIST_DICT),
+                                                        html.P(id=DEV_AVERAGE_RATING_LABEL,
+                                                                   children="0%",
+                                                                   style=RIGHT_SIDE_TEXT_DICT)
+                                                    ])
+                                                ])
+                                            ])
+
+                                    ], style=SMALL_TAB_PANEL_DICT | {'width': '45%', 'height': '100%'}
                                     )
                                 ])
                             ], style={'margin-left': '20px', 'margin-right': '20px'}

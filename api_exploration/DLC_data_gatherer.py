@@ -7,7 +7,8 @@ import pandas
 import pandas as pd
 
 from main import get_steam_API_response, get_steamspy_API_response, STEAM_SPY_GAME_INFO, STEAM_API_LANGUAGE, \
-    STEAM_GAME_INFO_URL, replace_owner_number_with_symbol
+    STEAM_GAME_INFO_URL
+from dash_plot_generation.utils import replace_owner_number_with_symbol_real_numeric
 
 
 def get_dlc_data_steam(id):
@@ -90,7 +91,7 @@ if __name__ == "__main__":
             data = pandas.read_csv(os.path.join(os.getcwd(), path, file_name), index_col=0)
             # data = data.iloc[0:10] # for testing
             full_df = get_dlc_for_df(data)
-            full_df = replace_owner_number_with_symbol(full_df)
+            full_df = replace_owner_number_with_symbol_real_numeric(full_df)
             file_name = "".join(["dlc_data", "_", str(file_index), ".csv"])
             file_path = os.path.join(os.getcwd(), dlc_path, file_name)
 

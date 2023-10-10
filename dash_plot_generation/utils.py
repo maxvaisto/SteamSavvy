@@ -1,15 +1,17 @@
-
+import math
+import re
 from typing import Sequence, Optional, Any
 import pandas
 
 DEFAULT_ILLEGAL_CONTINUATIONS = {"INC.", "LLC", "CO.", "LTD.", "S.R.O."}
 
-def get_owner_means(owner_limits: Sequence[Any]):
 
+def get_owner_means(owner_limits: Sequence[Any]):
     if not isinstance(owner_limits, list):
         return owner_limits
     else:
-        return (owner_limits[0]+owner_limits[1])/2
+        return (owner_limits[0] + owner_limits[1]) / 2
+
 
 def convert_owners_to_limits(owner_limit):
     if not isinstance(owner_limit, str):
@@ -17,10 +19,12 @@ def convert_owners_to_limits(owner_limit):
     owners_raw = [rev.replace(" ", "") for rev in owner_limit.split(" .. ")]
     owners_clean = []
     for owner_limit in owners_raw:
-        owner_limit = owner_limit.replace("M", "0"*6)
-        owner_limit = owner_limit.replace("k", "0"*3)
+        owner_limit = owner_limit.replace("M", "0" * 6)
+        owner_limit = owner_limit.replace("k", "0" * 3)
         owners_clean.append(int(owner_limit))
     return owners_clean
+
+
 def split_companies(arr, illegal_continuations: Optional[Sequence[str]] = None):
     """
     Splits the given string at comma sign as long as following the comma none of the illegal
@@ -69,3 +73,28 @@ def extract_unique_companies(nested_companies):
         if company not in unique_companies:
             unique_companies.append(company)
     return unique_companies
+
+
+def replace_owner_number_with_symbol(df):
+    def owner_strip(user_range: str):
+        if isinstance(user_range, str):
+            user_range = user_range.replace(",000,000", " M")
+            user_range = user_range.replace(",000", " k")
+        return user_range
+
+    df["owners"] = df["owners"].apply(lambda name: owner_strip((name)))
+    return df
+
+
+def replace_owner_number_with_symbol_real_numeric(value):
+    value_str = str(value)
+    value_str = re.sub("0" * 9 + "$", " B", value_str)
+    value_str = re.sub("0" * 6 + "$", " M", value_str)
+    value_str = re.sub("0" * 3 + "$", " k", value_str)
+    return value_str
+
+
+def round_to_three_largest_digits(number, accuracy = 2):
+    round_val = -(len(str(round(number)))-accuracy)
+    return_val = round(round(number), min(round_val,0))
+    return return_val
