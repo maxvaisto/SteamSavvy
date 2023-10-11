@@ -6,7 +6,8 @@ import pandas
 from dash import dash, dcc, html, Output, Input
 from collections import Counter
 from dash_plot_generation.utils import split_companies, extract_unique_companies, convert_owners_to_limits, \
-    get_owner_means, round_to_three_largest_digits, replace_owner_number_with_symbol_real_numeric
+    get_owner_means, round_to_three_largest_digits, replace_owner_number_with_symbol_real_numeric, \
+    convert_to_numeric_str, label_with_rev, label_with_text
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
 import plotly.express as px
@@ -14,7 +15,7 @@ import plotly.express as px
 DEV_AVERAGE_RATING_LABEL = "dev_average_rating"
 
 RIGHT_SIDE_TEXT_DICT = {'display': 'inline-block',
-                        'float': 'right', 'margin-right': '0%'}
+                        'float': 'right', 'margin-right': '0%', 'margin-bottom': '0px'}
 
 DARK_STEAM = "rgb(23,29,37)"
 WHITE_STEAM = "rgb(235,235,235)"
@@ -37,8 +38,8 @@ TAB_HIGHLIGHT_DICT = {'backgroundColor': TAB_HEADER_COLOR, 'color': 'white', "bo
                       'font-size': '15px'}
 PANEL_DEFAULT_DICT = {'display': 'inline-block',
                       'background-color': TAB_COLOR, 'border': '2px solid', 'border-color': TAB_EDGE,
-                      'color': WHITE_STEAM}
-SMALL_PANEL_DICT = {'float': 'left', 'background-color': SMALL_PANEL_COLOR, 'box-sizing': 'border-box',
+                      'color': WHITE_STEAM, 'height': '600px'}
+SMALL_PANEL_DICT = {'float': 'left', 'background-color': 'transparent', 'box-sizing': 'border-box',
                     'padding': '10px'}
 SMALL_TAB_PANEL_DICT = SMALL_PANEL_DICT | {'width': '48%', 'height': '100%',
                                            'margin-bottom': '50px',
@@ -50,7 +51,7 @@ SMALL_PANEL_HEADER_DICT = {'text-align': 'center', 'padding-top': '5%', 'padding
 
 DEV_TOP_GENRES_LABEL = "dev_top_genres"
 
-LIST_DICT = {'display': 'inline-block', 'margin-bottom': '0px'}
+LIST_DICT = {'display': 'inline-block', 'margin-bottom': '0px', 'padding-right': '0px'}
 
 DEV_CCU_LABEL = "dev_ccu"
 
@@ -91,7 +92,6 @@ APP = dash.Dash(
 
 def initialize_data():
     global df
-    files = os.listdir(split_csv_path)
     dataframe = None
     for file in os.listdir(split_csv_path):
         file_path = os.path.join(split_csv_path, file)
@@ -110,36 +110,93 @@ def initialize_data():
               inputs=[Input(DEVELOPER_DROPDOWN, "value")])
 def update_dev_info(dev_name):
     global df
-    if not dev_name:
+    if not (dev_name and isinstance(df,pandas.DataFrame)):
         raise PreventUpdate
+
+    # Remove empty rows
     mask = df.developer.apply(lambda x: dev_name in x if isinstance(x, str) else False)
     dev_data = df[mask]
-    ccu = sum(dev_data["ccu"])
-    dev_data["owner_means"] = dev_data["owners"].apply(lambda x: get_owner_means(convert_owners_to_limits(x)))
-    dev_data["game_prices"] = dev_data["price"]
-    dev_data["game_revenue"] = dev_data.apply(lambda x: x["owner_means"] * x["game_prices"] if
-    not (pandas.isna(x["owner_means"]) or pandas.isna(x["game_prices"]))
-    else 0, axis=1)
-    # dev_data["game_revenue"] = pandas.Series([owner_count * game_price for (owner_count, game_price) in
-    #                                           zip(dev_data["owner_means"], dev_data["game_prices"]) if
-    #                                           not (pandas.isna(game_price) or pandas.isna(owner_count))])
-    genre_totals = [genre for genre_list in dev_data["genres"] if isinstance(genre_list, str)
-                    for genre in genre_list.split(", ")]
-    genre_counts = Counter(genre_totals).most_common(3)
-    top_games = dev_data.sort_values(by=["game_revenue"], ascending=False)["name"].head(3)
-    # top_genres = dict(sorted(genre_totals.items(), key=lambda x: x[1], reverse=True)[:4])
-    dev_revenue = "$" + replace_owner_number_with_symbol_real_numeric(round_to_three_largest_digits(
-        int(round(numpy.nansum(dev_data["game_revenue"]), -1))))
-    dev_top_genre_labels = html.Div("\n".join([genre_c[0] for genre_c in genre_counts]),
-                                    style={'white-space': 'pre-line', 'padding-left': '5%'})
-    dev_ccu = replace_owner_number_with_symbol_real_numeric(round_to_three_largest_digits(ccu))
-    dev_game_count = str(dev_data.shape[0])
-    dev_game_revenue_per_game = "$" + replace_owner_number_with_symbol_real_numeric(round_to_three_largest_digits(
-        int(round(numpy.nansum(dev_data["game_revenue"]) / len(dev_data["game_revenue"]), -1))))
-    dev_top_games_label = html.Div("\n".join(top_games), style={'white-space': 'pre-line', 'padding-left': '5%'})
-    user_rating_value = str(round(100 * dev_data["Review_rating"].mean())) + "%"
+
+    # Engineer revenue data into the dataframe
+    add_game_revenues_and_owner_means(dev_data)
+
+    # Top games
+    dev_top_games_label = get_top_revenue_game_labels(dev_data)
+
+    # Dev total revenue
+    dev_revenue = "$" + get_total_revenue(dev_data)
+
+    # Dev revenue per game
+    dev_game_revenue_per_game = get_average_game_rev_label(dev_data)
+
+    # Top genres
+    dev_top_genre_labels = get_top_genre_labels(dev_data)
+
+    # CCU
+    dev_ccu = get_ccu_label(dev_data)
+
+    # Game count
+    dev_game_count = get_game_count_label(dev_data)
+
+    user_rating_value = get_average_user_rating_label(dev_data)
     return dev_revenue, dev_top_genre_labels, dev_ccu, dev_game_count, dev_game_revenue_per_game, dev_top_games_label, \
         user_rating_value
+
+
+def get_average_user_rating_label(dev_data):
+    value_str = str(round(100 * dev_data["Review_rating"].mean())) + "%"
+    label = label_with_text("Average game rating", value_str, 40, ".")
+    return label
+
+
+def get_game_count_label(dev_data):
+    return label_with_text("Number of games", str(dev_data.shape[0]), 40, ".")
+
+
+def add_game_revenues_and_owner_means(data):
+    data["owner_means"] = data["owners"].apply(lambda x: get_owner_means(convert_owners_to_limits(x)))
+    data["game_revenue"] = data.apply(lambda x: x["owner_means"] * x["price"] if
+    not (pandas.isna(x["owner_means"]) or pandas.isna(x["price"]))
+    else 0, axis=1)
+
+
+def get_top_revenue_game_labels(data):
+    top_games = data.sort_values(by=["game_revenue"], ascending=False).head(3)
+    top_games_processed = top_games.apply(lambda x: label_with_rev(x["name"], x["game_revenue"], 35,
+                                                                   ".", "$"), axis=1)
+    dev_top_games_with_dot = [" ".join(["•", game]) for game in top_games_processed]
+    dev_top_games_label = html.Div("\n".join(dev_top_games_with_dot),
+                                   style={'white-space': 'pre-line', 'padding-left': '5%'})
+    return dev_top_games_label
+
+
+def get_total_revenue(data):
+    return convert_to_numeric_str(numpy.nansum(data["game_revenue"]))
+
+
+def get_top_genre_labels(data):
+    genre_totals = [genre for genre_list in data["genres"] if isinstance(genre_list, str)
+                    for genre in genre_list.split(", ")]
+    genre_counts = Counter(genre_totals).most_common(3)
+    top_genres_rows = [label_with_text(genre[0], str(genre[1]), 50, ".") for genre in genre_counts]
+    top_genres_with_dot = [" ".join(["•", row]) for row in top_genres_rows]
+    top_genre_labels = html.Div("\n".join(top_genres_with_dot),
+                                    style={'white-space': 'pre-line', 'padding-left': '5%'})
+    return top_genre_labels
+
+
+def get_ccu_label(data):
+    ccu = sum(data["ccu"])
+    dev_ccu = convert_to_numeric_str(ccu)
+
+    return label_with_text("Concurrent users", dev_ccu, 40, ".")
+
+
+def get_average_game_rev_label(data):
+    game_revenue_per_game_raw = numpy.nansum(data["game_revenue"]) / len(data["game_revenue"])
+    dev_game_revenue_per_game_row = label_with_rev("Average", game_revenue_per_game_raw, 35, ".", "$")
+    dev_game_revenue_per_game = " ".join(["•", dev_game_revenue_per_game_row])
+    return dev_game_revenue_per_game
 
 
 def initialize_dash(host: str = "0.0.0.0", **kwargs):
@@ -181,70 +238,124 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                                 style=TAB_NORMAL_DICT, selected_style=TAB_HIGHLIGHT_DICT,
                                 children=[
                                     html.Div(children=[
-                                        html.Div(style=SMALL_PANEL_DICT | {'width': '60%', 'height': '100%',
-                                                                           'margin-right': '5%',
-                                                                           'padding-left': '5%',
-                                                                           'background-color': TAB_COLOR},
-                                                 children=[dcc.Graph(
-                                                     figure=go.Figure(data=[
-                                                         {'x': ["Action", "Adventure", "RPG", "Puzzle", "Strategy"],
-                                                          'y': [0.7, 0.4, 0.8, 1.2, 1.3],
-                                                          'type': 'bar'},
-                                                     ],
-                                                         layout=dict(template="plotly_dark",
-                                                                     title="Relative genre perfomance",
-                                                                     plot_bgcolor=TAB_COLOR,
-                                                                     paper_bgcolor=TAB_COLOR)),
+                                        html.Div(
+                                            children=[
+                                                html.Div(style=SMALL_PANEL_DICT | {'width': '60%', 'height': '100%',
+                                                                                   'margin-right': '5%',
+                                                                                   'padding-left': '5%',
+                                                                                   'margin-bottom': '5%',
+                                                                                   'background-color': TAB_COLOR},
+                                                         children=[dcc.Graph(
+                                                             figure=go.Figure(data=[
+                                                                 {'x': ["Action", "Adventure", "RPG", "Puzzle",
+                                                                        "Strategy"],
+                                                                  'y': [0.7, 0.4, 0.8, 1.2, 1.3],
+                                                                  'type': 'bar'},
+                                                             ],
+                                                                 layout=dict(template="plotly_dark",
+                                                                             title="Relative genre perfomance",
+                                                                             plot_bgcolor=TAB_COLOR,
+                                                                             paper_bgcolor=TAB_COLOR)),
 
-                                                 ),
-                                                     html.P(f"""Genre performance measures the assessed exploitability of the 
+                                                         ),
+                                                             html.P(f"""Genre performance measures the assessed exploitability of the 
                                             specific game genre. The assesment is done by estimating the genre popularity,
                                             and games developed in the next two years and showing the relative differences
                                             between the genres.""")]),
-                                        html.Div(style=SMALL_PANEL_DICT | {'width': '35%', 'height': '100%',
-                                                                           'background-color': TAB_COLOR},
-                                                 children=[
-                                                     html.Div(style={'width': '100%', 'height': '50%'},
-                                                              children=[dcc.Graph(
-                                                                  figure=go.Figure(data=[go.Pie(
-                                                                      labels=["Action", "Adventure", "RPG", "Puzzle",
-                                                                              "Strategy",
-                                                                              "Other"],
-                                                                      values=[0.8, 0.3, 0.4, 0.4, 0.3, 0.55],
-                                                                      sort=False)],
-                                                                      layout=dict(template="plotly_dark",
-                                                                                  title="Genre popularity",
-                                                                                  plot_bgcolor=TAB_COLOR,
-                                                                                  paper_bgcolor=TAB_COLOR,
-                                                                                  margin=dict(l=20, r=20, t=50, b=20))),
-                                                                  style={'width': '100%', 'height': '100%'})]),
-                                                     html.Div(style={'width': '100%', 'height': '50%'},
-                                                              children=[dcc.Graph(
-                                                                  figure=go.Figure(data=[go.Pie(
-                                                                      labels=["Action", "Adventure", "RPG", "Puzzle",
-                                                                              "Strategy",
-                                                                              "Other"],
-                                                                      values=[0.7, 0.5, 0.1, 0.4, 0.3, 0.7],
-                                                                      sort=False, )],
-                                                                      layout=dict(template="plotly_dark",
-                                                                                  title="Genre revenue share",
-                                                                                  plot_bgcolor=TAB_COLOR,
-                                                                                  paper_bgcolor=TAB_COLOR,
-                                                                                  margin=dict(l=20, r=20, t=50, b=20))),
-                                                                  style={'width': '100%', 'height': '100%'})]
-                                                              )])],
-                                        style={'height': '600px', 'width': '100%', 'margin': '0'})
+                                                html.Div(style=SMALL_PANEL_DICT | {'width': '35%', 'height': '100%',
+                                                                                   'background-color': TAB_COLOR},
+                                                         children=[
+                                                             html.Div(children=[
+                                                                 html.Div(style={'width': '100%', 'height': '50%'},
+                                                                          children=[dcc.Graph(
+                                                                              figure=go.Figure(data=[go.Pie(
+                                                                                  labels=["Action", "Adventure", "RPG",
+                                                                                          "Puzzle",
+                                                                                          "Strategy",
+                                                                                          "Other"],
+                                                                                  values=[0.8, 0.3, 0.4, 0.4, 0.3,
+                                                                                          0.55],
+                                                                                  sort=False)],
+                                                                                  layout=dict(template="plotly_dark",
+                                                                                              title="Genre popularity",
+                                                                                              plot_bgcolor=TAB_COLOR,
+                                                                                              paper_bgcolor=TAB_COLOR,
+                                                                                              margin=dict(l=20, r=20,
+                                                                                                          t=50, b=20))),
+                                                                              style={'width': '100%',
+                                                                                     'height': '100%'})]),
+                                                                 html.Div(style={'width': '100%', 'height': '50%'},
+                                                                          children=[dcc.Graph(
+                                                                              figure=go.Figure(data=[go.Pie(
+                                                                                  labels=["Action", "Adventure", "RPG",
+                                                                                          "Puzzle",
+                                                                                          "Strategy",
+                                                                                          "Other"],
+                                                                                  values=[0.7, 0.5, 0.1, 0.4, 0.3, 0.7],
+                                                                                  sort=False)],
+                                                                                  layout=dict(template="plotly_dark",
+                                                                                              title="Genre revenue share",
+                                                                                              plot_bgcolor=TAB_COLOR,
+                                                                                              paper_bgcolor=TAB_COLOR,
+                                                                                              margin=dict(l=20, r=20,
+                                                                                                          t=50, b=20))),
+                                                                              style={'width': '100%',
+                                                                                     'height': '100%'})]
+                                                                          )
+
+                                                             ], style={'height': '540px'}
+                                                             ),
+                                                         ]
+                                                         )
+                                            ]
+                                        ),
+
+                                        html.Div(children=[
+                                            html.H5("Genre prediction", style={'margin-bottom':'50px'}),
+                                            html.Div(children=[
+                                                html.Div(children=[
+                                                    html.P("Selected genre:", style={'margin-bottom':'10px'}),
+                                                    dcc.Dropdown(id="genre_dropdown", value="action",
+                                                                 options=[{"label": html.Span([genre],
+                                                                                              style={
+                                                                                                  'color': WHITE_STEAM}),
+                                                                           "value": genre} for genre in
+                                                                          ["action"]],
+                                                                 style={'color': WHITE_STEAM, 'display': 'inline-block',
+                                                                        'width': '50%'},
+                                                                 className='dash-dropdown',
+                                                                 ),
+
+                                                ],
+                                                    style={'width': '100%', 'margin-bottom':'50px'})
+                                            ]),
+                                            dcc.Graph(figure=go.Figure(layout=dict(template="plotly_dark",
+                                                                                   title="Genre prediction plot",
+                                                                                   plot_bgcolor=TAB_COLOR,
+                                                                                   paper_bgcolor=TAB_COLOR,
+                                                                                   margin=dict(l=20, r=20,
+                                                                                               t=50, b=20)))),
+                                            html.P("""This is an individual regression estimate for the genre that represents
+                                        the estimated amount of games to be produced in the next two years""")
+
+                                        ], style=SMALL_PANEL_DICT | {'height': '100%', 'margin-right': '5%',
+                                                                     'padding-left': '5%', 'margin-bottom': '5%',
+                                                                     'margin-top': '5%', 'background-color': TAB_COLOR})
+
+                                    ],
+                                        style={'height': '550px', 'width': '100%', 'margin': '0', 'overflow': 'auto'},
+                                        className="scrollable")
                                 ]),
                         dcc.Tab(label="Game popularity", value="tab2",
                                 style=TAB_NORMAL_DICT, selected_style=TAB_HIGHLIGHT_DICT),
-                        dcc.Tab(label="Company revenues", value="tab3",
-                                style=TAB_NORMAL_DICT, selected_style=TAB_HIGHLIGHT_DICT),
                         dcc.Tab(label="Market performance", value="tab4",
+                                style=TAB_NORMAL_DICT, selected_style=TAB_HIGHLIGHT_DICT),
+                        dcc.Tab(label="Market prediction tool", value="tab5",
                                 style=TAB_NORMAL_DICT, selected_style=TAB_HIGHLIGHT_DICT),
                     ],
                              style=DEFAULT_TABS_DICT),
 
-                ], style=PANEL_DEFAULT_DICT | {'width': 'calc(45% - 10px)', 'height': '600px',
+                ], style=PANEL_DEFAULT_DICT | {'width': 'calc(45% - 10px)',
                                                'margin-right': '100px', 'padding-left': '4%',
                                                'padding-right': '4%', 'padding-bottom': '4%',
                                                'padding-top': '3%', 'margin-bottom': '20px'
@@ -271,16 +382,17 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                                                     html.P("Game sale revenue estimates"),
                                                     html.Div(children=[
                                                         html.Div(children=[
-                                                            html.P("Total: ", style=LIST_DICT | {'padding-left': '5%'}),
+                                                            html.P("• Total ....................",
+                                                                   style=LIST_DICT | {'padding-left': '5%'}),
                                                             html.P(id=DEV_REVENUE_LABEL, children="$524 M",
                                                                    style=RIGHT_SIDE_TEXT_DICT)
                                                         ]),
                                                         html.Div(children=[
-                                                            html.P("Game average:",
-                                                                   style=LIST_DICT | {'padding-left': '5%'}),
+                                                            # html.P("• Average ...............",
+                                                            #       style=LIST_DICT | {'padding-left': '5%'}),
                                                             html.P(id=DEV_REV_PER_GAME_LABEL, children="$925 M",
-                                                                   style=RIGHT_SIDE_TEXT_DICT)
-                                                        ])
+                                                                   style=LIST_DICT | {'padding-left': '5%'})
+                                                        ]),
                                                     ],
                                                         style={'margin-bottom': '20px'}),
                                                     html.Div(children=[
@@ -296,7 +408,6 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                                     html.Div(children=[
                                         html.Div(
                                             children=[
-
                                                 html.Div(
                                                     children=[html.P("General information",
                                                                      style=SMALL_PANEL_HEADER_DICT)],
@@ -304,16 +415,14 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                                                            'border-bottom': '2px solid ' + TAB_EDGE}),
                                                 html.Div(children=[
                                                     html.Div(children=[
-                                                        html.P("Number of games:", style=LIST_DICT),
                                                         html.P(id=DEV_GAME_COUNT_LABEL, children="5",
-                                                               style=RIGHT_SIDE_TEXT_DICT),
+                                                               style=LIST_DICT),
                                                     ],
                                                         style={'margin-bottom': '10px'}
                                                     ),
                                                     html.Div(children=[
-                                                        html.P("Concurrent users:", style=LIST_DICT),
-                                                        html.P(id=DEV_CCU_LABEL, children="92.625.000€",
-                                                               style=RIGHT_SIDE_TEXT_DICT),
+                                                        html.P(id=DEV_CCU_LABEL, children="",
+                                                               style=LIST_DICT),
                                                     ],
                                                         style={'margin-bottom': '10px'}
                                                     ),
@@ -325,10 +434,9 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                                                         style={'margin-bottom': '10px'}
                                                     ),
                                                     html.Div(children=[
-                                                        html.P("Average game rating", style=LIST_DICT),
                                                         html.P(id=DEV_AVERAGE_RATING_LABEL,
-                                                               children="0%",
-                                                               style=RIGHT_SIDE_TEXT_DICT)
+                                                               children="",
+                                                               style=LIST_DICT)
                                                     ])
                                                 ])
                                             ])
@@ -350,7 +458,7 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                     ],
                              style=DEFAULT_TABS_DICT),
                 ],
-                    style=PANEL_DEFAULT_DICT | {'width': 'calc(30% - 10px)', 'height': '600px', 'margin-right': '4%',
+                    style=PANEL_DEFAULT_DICT | {'width': 'calc(30% - 10px)', 'margin-right': '4%',
                                                 'padding-left': '3%',
                                                 'padding-right': '3%', 'padding-bottom': '4%',
                                                 'padding-top': '3%', 'margin-bottom': '20px'
@@ -366,6 +474,6 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
 
 if __name__ == "__main__":
     initialize_data()
-    initialize_dash(debug=True)
+    initialize_dash(debug=False)
 
 print(csv_path)

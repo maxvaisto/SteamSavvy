@@ -94,7 +94,29 @@ def replace_owner_number_with_symbol_real_numeric(value):
     return value_str
 
 
-def round_to_three_largest_digits(number, accuracy = 2):
-    round_val = -(len(str(round(number)))-accuracy)
-    return_val = round(round(number), min(round_val,0))
+def update_dots(n):
+    num_dots = (n % 10) + 1
+    dots = "." * num_dots
+    return [dots]
+
+
+def convert_to_numeric_str(value, **kwargs):
+    return replace_owner_number_with_symbol_real_numeric(round_to_three_largest_digits(value, **kwargs))
+
+
+def label_with_rev(label, rev, space, char=".", currency_symbol=""):
+    processed_rev = convert_to_numeric_str(int(rev))
+    return_val = label_with_text(label, "".join([currency_symbol, processed_rev]), space, char)
+    return return_val
+
+
+def label_with_text(first_str, second_str, space, char="."):
+    white_space_filler = char * (space - (len(first_str) + len(second_str)) - 2)
+    return_val = " ".join([first_str, white_space_filler, second_str])
+    return return_val
+
+
+def round_to_three_largest_digits(number, accuracy=2):
+    round_val = -(len(str(round(number))) - accuracy)
+    return_val = round(round(number), min(round_val, 0))
     return return_val
