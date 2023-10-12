@@ -12,6 +12,8 @@ from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
 import plotly.express as px
 
+SPACE_NORMAL_ENTRY = 35
+
 DEV_AVERAGE_RATING_LABEL = "dev_average_rating"
 
 RIGHT_SIDE_TEXT_DICT = {'display': 'inline-block',
@@ -124,7 +126,7 @@ def update_dev_info(dev_name):
     dev_top_games_label = get_top_revenue_game_labels(dev_data)
 
     # Dev total revenue
-    dev_revenue = "$" + get_total_revenue(dev_data)
+    dev_revenue = get_total_revenue_label(dev_data)
 
     # Dev revenue per game
     dev_game_revenue_per_game = get_average_game_rev_label(dev_data)
@@ -145,12 +147,12 @@ def update_dev_info(dev_name):
 
 def get_average_user_rating_label(dev_data):
     value_str = str(round(100 * dev_data["Review_rating"].mean())) + "%"
-    label = label_with_text("Average game rating", value_str, 40, ".")
+    label = label_with_text("Average game rating", value_str, SPACE_NORMAL_ENTRY, ".")
     return label
 
 
 def get_game_count_label(dev_data):
-    return label_with_text("Number of games", str(dev_data.shape[0]), 40, ".")
+    return label_with_text("Number of games", str(dev_data.shape[0]), SPACE_NORMAL_ENTRY, ".")
 
 
 def add_game_revenues_and_owner_means(data):
@@ -162,7 +164,7 @@ def add_game_revenues_and_owner_means(data):
 
 def get_top_revenue_game_labels(data):
     top_games = data.sort_values(by=["game_revenue"], ascending=False).head(3)
-    top_games_processed = top_games.apply(lambda x: label_with_rev(x["name"], x["game_revenue"], 35,
+    top_games_processed = top_games.apply(lambda x: label_with_rev(x["name"], x["game_revenue"], SPACE_NORMAL_ENTRY,
                                                                    ".", "$"), axis=1)
     dev_top_games_with_dot = [" ".join(["•", game]) for game in top_games_processed]
     dev_top_games_label = html.Div("\n".join(dev_top_games_with_dot),
@@ -170,8 +172,9 @@ def get_top_revenue_game_labels(data):
     return dev_top_games_label
 
 
-def get_total_revenue(data):
-    return convert_to_numeric_str(numpy.nansum(data["game_revenue"]))
+def get_total_revenue_label(data):
+    top_games_processed = label_with_rev("• Total", numpy.nansum(data["game_revenue"]), SPACE_NORMAL_ENTRY, ".", "$")
+    return top_games_processed
 
 
 def get_top_genre_labels(data):
@@ -189,12 +192,12 @@ def get_ccu_label(data):
     ccu = sum(data["ccu"])
     dev_ccu = convert_to_numeric_str(ccu)
 
-    return label_with_text("Concurrent users", dev_ccu, 40, ".")
+    return label_with_text("Concurrent users", dev_ccu, SPACE_NORMAL_ENTRY, ".")
 
 
 def get_average_game_rev_label(data):
     game_revenue_per_game_raw = numpy.nansum(data["game_revenue"]) / len(data["game_revenue"])
-    dev_game_revenue_per_game_row = label_with_rev("Average", game_revenue_per_game_raw, 35, ".", "$")
+    dev_game_revenue_per_game_row = label_with_rev("Average", game_revenue_per_game_raw, SPACE_NORMAL_ENTRY, ".", "$")
     dev_game_revenue_per_game = " ".join(["•", dev_game_revenue_per_game_row])
     return dev_game_revenue_per_game
 
@@ -212,10 +215,10 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
 
     global APP, df, DEMO_PLOT_COLORS, DEMO_PLOT_LABELS
 
-    # unique_publishers = extract_unique_companies(df["publisher"].apply(lambda x: split_companies(x)))
-    # unique_developers = extract_unique_companies(df["developer"].iloc[0:10].apply(lambda x: split_companies(x)))
-    unique_publishers = ["Valve"]
-    unique_developers = ["Valve"]
+    unique_publishers = extract_unique_companies(df["publisher"].apply(lambda x: split_companies(x)))
+    unique_developers = extract_unique_companies(df["developer"].iloc[0:10].apply(lambda x: split_companies(x)))
+    # unique_publishers = ["Valve"]
+    # unique_developers = ["Valve"]
 
     APP.css.append_css({
         'external_url': 'styles.css'
@@ -224,7 +227,7 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
         children=[
             html.Nav(className="nav nav-pills", children=[
                 html.H6("SteamSavvy - Steam game data insights",
-                        style={"margin-left": "30px", "width": "20%", "display": "inline-block"}),
+                        style={"margin-left": "60px", "width": "20%", "display": "inline-block"}),
                 html.A('About', className="nav-item nav-link btn", href='/apps/App1',
                        style={"margin-left": "300px"}),
                 html.A('Technical report', className="nav-item nav-link active btn", href='/apps/App2',
@@ -233,7 +236,7 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                      style={"background-color": "rgb(23,29,37)", "color": "rgb(197,195,192)", 'width': '100%'}),
             html.Div(className="row", children=[
                 html.Div(children=[
-                    dcc.Tabs(id="tabs_main_plots1", value="tab1", children=[
+                    dcc.Tabs(id="main_plots", value="tab1", children=[
                         dcc.Tab(label="Genre performance", value="tab1",
                                 style=TAB_NORMAL_DICT, selected_style=TAB_HIGHLIGHT_DICT,
                                 children=[
@@ -355,20 +358,20 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                     ],
                              style=DEFAULT_TABS_DICT),
 
-                ], style=PANEL_DEFAULT_DICT | {'width': 'calc(45% - 10px)',
-                                               'margin-right': '100px', 'padding-left': '4%',
-                                               'padding-right': '4%', 'padding-bottom': '4%',
-                                               'padding-top': '3%', 'margin-bottom': '20px'
+                ], style=PANEL_DEFAULT_DICT | {'width': '900px',
+                                               'margin-right': '100px', 'padding-left': '50px',
+                                               'padding-right': '50px', 'padding-bottom': '50px',
+                                               'padding-top': '50px', 'margin-bottom': '50px'
                                                }),
                 html.Div(children=[
-                    dcc.Tabs(id="tabs_main_plots2", value="tab3", children=[
+                    dcc.Tabs(id="company_information", value="tab3", children=[
                         dcc.Tab(label="Developer infromation", value="tab3", children=[
                             html.Div(children=[
                                 dcc.Dropdown(id=DEVELOPER_DROPDOWN, value="Valve",
                                              options=[{"label": html.Span([developer], style={'color': WHITE_STEAM}),
                                                        "value": developer} for developer in unique_developers],
                                              style={'margin-top': '20px', 'color': WHITE_STEAM},
-                                             className='dash-dropdown',  # Add the CSS class here
+                                             className='dash-dropdown',
                                              ),
                                 html.Div(children=[
                                     html.Div(
@@ -382,14 +385,10 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                                                     html.P("Game sale revenue estimates"),
                                                     html.Div(children=[
                                                         html.Div(children=[
-                                                            html.P("• Total ....................",
-                                                                   style=LIST_DICT | {'padding-left': '5%'}),
                                                             html.P(id=DEV_REVENUE_LABEL, children="$524 M",
-                                                                   style=RIGHT_SIDE_TEXT_DICT)
+                                                                   style=LIST_DICT | {'padding-left': '5%'})
                                                         ]),
                                                         html.Div(children=[
-                                                            # html.P("• Average ...............",
-                                                            #       style=LIST_DICT | {'padding-left': '5%'}),
                                                             html.P(id=DEV_REV_PER_GAME_LABEL, children="$925 M",
                                                                    style=LIST_DICT | {'padding-left': '5%'})
                                                         ]),
@@ -403,7 +402,7 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                                             ], style={'padding-left': '5%', 'padding-right': '5%',
                                                       'padding-bottom': '5%'})
                                         ],
-                                        style=SMALL_TAB_PANEL_DICT | {'margin-right': '20px'}
+                                        style=SMALL_TAB_PANEL_DICT | {'margin-right': '20px', 'margin-left': '0px'}
                                     ),
                                     html.Div(children=[
                                         html.Div(
@@ -441,10 +440,11 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                                                 ])
                                             ])
 
-                                    ], style=SMALL_TAB_PANEL_DICT | {'width': '45%', 'height': '100%'}
+                                    ], style=SMALL_TAB_PANEL_DICT | {'width': '45%', 'height': '100%',
+                                                                     'margin-right': '0px', 'margin-left': '20px'}
                                     )
                                 ], style={'height': '100%'})
-                            ], style={'margin-left': '20px', 'margin-right': '20px'}
+                            ], style={'margin-left': '20px', 'margin-right': '0px'}
                             )
                         ], style=TAB_NORMAL_DICT, selected_style=TAB_HIGHLIGHT_DICT),
                         dcc.Tab(label="Publisher information", value="tab4", children=[
@@ -458,13 +458,13 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                     ],
                              style=DEFAULT_TABS_DICT),
                 ],
-                    style=PANEL_DEFAULT_DICT | {'width': 'calc(30% - 10px)', 'margin-right': '4%',
-                                                'padding-left': '3%',
-                                                'padding-right': '3%', 'padding-bottom': '4%',
-                                                'padding-top': '3%', 'margin-bottom': '20px'
+                    style=PANEL_DEFAULT_DICT | {'width':'700px',
+                                                'padding-left': '50px',
+                                                'padding-right': '50px', 'padding-bottom': '50px',
+                                                'padding-top': '50px', 'margin-bottom': '50px'
                                                 })
             ],
-                     style={'width': '100%', "padding-top": "15px", 'padding-left': "50px"}),
+                     style={'width': '100%', "padding-top": "30px", 'padding-left': "50px"}),
         ],
         style={"font-family": "Tahoma"}
     )
@@ -474,6 +474,6 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
 
 if __name__ == "__main__":
     initialize_data()
-    initialize_dash(debug=False)
+    initialize_dash(debug=True)
 
 print(csv_path)
