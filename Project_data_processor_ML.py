@@ -2,11 +2,22 @@
 # Sergei Panarin
 
 
+
 # Data preprocessing
 
 # IMPORTANT THINGS:
 # Change the number of input files in the read_data function OR later replace with full data file
 # FUNCTION replace owner with symbol is copied from the main branch, DELETE LATER and IMPORT
+
+import pandas as pd
+import numpy as np
+import datetime as dt
+import re
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
+from math import isnan
+
 
 # Reading the data from source:
 # Pandas cannot read from GitLab URLs, so work is done with locally stored datasets.
@@ -19,8 +30,8 @@ def read_data():
     partial_dfs = []
 
     # range can be changed, reads segments of the full dataset
-    for index in range(10):
-        datafile="file_segments/game_data_"+str(index+1)+".csv"
+    for index in range(66):
+        datafile="api_exploration/file_segments/game_data_"+str(index+1)+".csv"
         partial_dfs.append(pd.read_csv(datafile))
     
     # Combine partial dataframes into the full version
@@ -132,8 +143,8 @@ def lin_reg(df):
     return model
 
 # Plot the given genre data 
-def get_genre_plot(dict_data, genre):
-    plt.scatter(dict_data[genre]["release_date"], dict_data[genre]["owners"]) 
+def get_genre_plot(dict_data: object, genre: object) -> object:
+    plt.scatter(dict_data[genre]["release_date"], dict_data[genre]["owners"])
     plt.show()
     
 def get_data_interval(days):
@@ -148,14 +159,7 @@ def get_data_interval(days):
     
 if __name__ == "__main__":
 
-    import pandas as pd
-    import numpy as np
-    import datetime as dt
-    import re
-    from sklearn.model_selection import train_test_split
-    from sklearn.linear_model import LinearRegression
-    import matplotlib.pyplot as plt
-    from math import isnan
+
     
     
     full_data_df = read_data()
@@ -165,7 +169,7 @@ if __name__ == "__main__":
     data = replace_owner_str_with_average_number(full_data_df)
     genre_data = genre_data_aggregation(full_data_df, 2)
     
-    genre = "Action"
+    genre = "Free to Play"
     
     get_genre_plot(genre_data, genre)
     
