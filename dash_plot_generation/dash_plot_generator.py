@@ -1,3 +1,4 @@
+import json
 import math
 import os
 
@@ -11,6 +12,16 @@ from dash_plot_generation.utils import split_companies, extract_unique_companies
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
 import plotly.express as px
+
+from visual_presentation.Distribution_of_review_rating import get_rating_density_plot
+
+RATING_MIN_REVIEWS = "min_reviews_id"
+
+RATING_SLIDER = "rating_slider"
+
+RATING_DISTRIBUTION_PLOT = "game_popularity_density_plot"
+
+MAIN_PANEL_TAB_DICT = {'height': '550px', 'width': '100%', 'margin': '0', 'overflow': 'auto'}
 
 SPACE_NORMAL_ENTRY = 35
 
@@ -28,6 +39,7 @@ TAB_EDGE = "rgb(37,55,77)"
 DROPDOWN_COLOR = "rgb(50,70,101"
 SMALL_PANEL_COLOR = "rgb(22,32,45)"
 
+layout=dict(template="plotly_dark", plot_bgcolor="rgb(31,46,65)", paper_bgcolor="rgb(31,46,65)")
 DEFAULT_TABS_DICT = {'width': 'auto', 'display': 'flex',
                      'background-color': TAB_COLOR, 'border-color': TAB_EDGE}
 TAB_HEADER_COLOR = "rgb(45,96,150)"
@@ -54,6 +66,9 @@ SMALL_PANEL_HEADER_DICT = {'text-align': 'center', 'padding-top': '5%', 'padding
 DEV_TOP_GENRES_LABEL = "dev_top_genres"
 
 LIST_DICT = {'display': 'inline-block', 'margin-bottom': '0px', 'padding-right': '0px'}
+
+NORMAL_DIVISION_DICT = SMALL_PANEL_DICT | {'width': '60%', 'height': '100%', 'margin-right': '5%', 'padding-left': '5%',
+                                        'margin-bottom': '5%', 'background-color': TAB_COLOR}
 
 DEV_CCU_LABEL = "dev_ccu"
 
@@ -82,7 +97,9 @@ csv_path = os.path.normpath(os.getcwd() + os.sep + os.pardir + os.sep + "api_exp
 split_csv_path = os.path.join(csv_path, "file_segments")
 # steam_dark_template = dict(layout=go.Layout(title_font))
 
-df = None
+FULL_DATA = None
+OWNER_RANGE_PARTS_SORTED = None
+
 DASH_ASSETS_PATH = "dash_assets"
 
 APP = dash.Dash(
@@ -93,14 +110,36 @@ APP = dash.Dash(
 
 
 def initialize_data():
-    global df
+    global FULL_DATA, OWNER_RANGE_PARTS_SORTED
     dataframe = None
     for file in os.listdir(split_csv_path):
         file_path = os.path.join(split_csv_path, file)
         dataframe = pandas.concat([dataframe, pandas.read_csv(file_path)]) if dataframe is not None \
             else pandas.read_csv(file_path)
-    df = dataframe
 
+    owner_ranges = {value_range for value_range in dataframe["owners"].unique()}
+
+    ranges_test = [(convert_owners_to_limits(value_range), value_range.split(" .. ")) for value_range in owner_ranges]
+    unique_owner_values = {(limits[i], limits_str[i]) for (limits, limits_str)
+                           in ranges_test for i in range(2)}
+    sorted_owner_list = sorted(unique_owner_values, key=lambda range: range[0])
+
+    OWNER_RANGE_PARTS_SORTED = sorted_owner_list
+    FULL_DATA = dataframe
+
+
+@APP.callback(Output(RATING_DISTRIBUTION_PLOT, "figure"),
+              Input(RATING_SLIDER,"value"),
+              Input(RATING_MIN_REVIEWS, "value"))
+def update_density_filter_plot(rating_range, min_reviews):
+    global FULL_DATA, OWNER_RANGE_PARTS_SORTED
+
+    allowed_indexes = [str_val for (val,str_val) in OWNER_RANGE_PARTS_SORTED[rating_range[0]:rating_range[1]+1]]
+    allowed_ratings = [" .. ".join([val, allowed_indexes[i+1]]) for (i,val) in enumerate(allowed_indexes)
+                       if i<len(allowed_indexes)-1]
+
+    output = get_rating_density_plot(FULL_DATA,allowed_ratings, min_reviews)
+    return output['fig']
 
 @APP.callback([Output(DEV_REVENUE_LABEL, "children"),
                Output(DEV_TOP_GENRES_LABEL, "children"),
@@ -110,14 +149,15 @@ def initialize_data():
                Output(DEV_TOP_GAMES, "children"),
                Output(DEV_AVERAGE_RATING_LABEL, "children")],
               inputs=[Input(DEVELOPER_DROPDOWN, "value")])
+
 def update_dev_info(dev_name):
-    global df
-    if not (dev_name and isinstance(df,pandas.DataFrame)):
+    global FULL_DATA,OWNER_RANGE_PARTS_SORTED
+    if not (dev_name and isinstance(FULL_DATA, pandas.DataFrame)):
         raise PreventUpdate
 
     # Remove empty rows
-    mask = df.developer.apply(lambda x: dev_name in x if isinstance(x, str) else False)
-    dev_data = df[mask]
+    mask = FULL_DATA.developer.apply(lambda x: dev_name in x if isinstance(x, str) else False)
+    dev_data = FULL_DATA[mask]
 
     # Engineer revenue data into the dataframe
     add_game_revenues_and_owner_means(dev_data)
@@ -213,12 +253,17 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
         number but replace the IP address with your local network IP instead.
     """
 
-    global APP, df, DEMO_PLOT_COLORS, DEMO_PLOT_LABELS
+    global APP, FULL_DATA, DEMO_PLOT_COLORS, DEMO_PLOT_LABELS, OWNER_RANGE_PARTS_SORTED
 
-    unique_publishers = extract_unique_companies(df["publisher"].apply(lambda x: split_companies(x)))
-    unique_developers = extract_unique_companies(df["developer"].iloc[0:10].apply(lambda x: split_companies(x)))
-    # unique_publishers = ["Valve"]
-    # unique_developers = ["Valve"]
+    # unique_publishers = extract_unique_companies(df["publisher"].apply(lambda x: split_companies(x)))
+    # unique_developers = extract_unique_companies(df["developer"].iloc[0:10].apply(lambda x: split_companies(x)))
+    unique_publishers = ["Valve"]
+    unique_developers = ["Valve"]
+    max_reviews = numpy.nanmax(FULL_DATA.apply(lambda x: x["positive"] + x["negative"], axis=1))
+    owner_range_dict = {index: val_str for (index, (val,val_str)) in enumerate(OWNER_RANGE_PARTS_SORTED)}
+    min_owner = min(owner_range_dict.keys())
+    max_owner = max(owner_range_dict.keys())
+
 
     APP.css.append_css({
         'external_url': 'styles.css'
@@ -243,11 +288,7 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                                     html.Div(children=[
                                         html.Div(
                                             children=[
-                                                html.Div(style=SMALL_PANEL_DICT | {'width': '60%', 'height': '100%',
-                                                                                   'margin-right': '5%',
-                                                                                   'padding-left': '5%',
-                                                                                   'margin-bottom': '5%',
-                                                                                   'background-color': TAB_COLOR},
+                                                html.Div(style=NORMAL_DIVISION_DICT,
                                                          children=[dcc.Graph(
                                                              figure=go.Figure(data=[
                                                                  {'x': ["Action", "Adventure", "RPG", "Puzzle",
@@ -261,10 +302,11 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                                                                              paper_bgcolor=TAB_COLOR)),
 
                                                          ),
-                                                             html.P(f"""Genre performance measures the assessed exploitability of the 
-                                            specific game genre. The assesment is done by estimating the genre popularity,
-                                            and games developed in the next two years and showing the relative differences
-                                            between the genres.""")]),
+                                                             html.P(f"""Genre performance measures the assessed 
+                                                             exploitability of the specific game genre. The assessment 
+                                                             is done by estimating the genre popularity, and games 
+                                                             developed in the next two years and showing the relative 
+                                                             differences between the genres.""")]),
                                                 html.Div(style=SMALL_PANEL_DICT | {'width': '35%', 'height': '100%',
                                                                                    'background-color': TAB_COLOR},
                                                          children=[
@@ -341,16 +383,56 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
                                             html.P("""This is an individual regression estimate for the genre that represents
                                         the estimated amount of games to be produced in the next two years""")
 
-                                        ], style=SMALL_PANEL_DICT | {'height': '100%', 'margin-right': '5%',
-                                                                     'padding-left': '5%', 'margin-bottom': '5%',
-                                                                     'margin-top': '5%', 'background-color': TAB_COLOR})
+                                        ], style=NORMAL_DIVISION_DICT | {'width':'90%'})
 
                                     ],
-                                        style={'height': '550px', 'width': '100%', 'margin': '0', 'overflow': 'auto'},
+                                        style=MAIN_PANEL_TAB_DICT,
                                         className="scrollable")
                                 ]),
                         dcc.Tab(label="Game popularity", value="tab2",
-                                style=TAB_NORMAL_DICT, selected_style=TAB_HIGHLIGHT_DICT),
+                                style=TAB_NORMAL_DICT, selected_style=TAB_HIGHLIGHT_DICT,
+                                children=[
+                                    html.Div(id= "Game pop general layout",
+                                             style= MAIN_PANEL_TAB_DICT,
+                                             className="scrollable",
+                                             children= [
+                                                 html.Div(id="Game pop top div",
+                                                          children=[
+                                                              html.Div(id="game popularity filters",
+                                                                       style=NORMAL_DIVISION_DICT | {'width': '100%', 'height': '100%',
+                                                                                                     'margin_left':'0px', 'margin_right': '0px',
+                                                                                   'background-color': TAB_COLOR, 'display': 'inline-block'},
+
+                                                                       children=[
+                                                                            html.P("Filters"),
+                                                                            html.Small("Number of game owners"),
+                                                                            dcc.RangeSlider(id=RATING_SLIDER,
+                                                                                            min=min_owner, max=max_owner, marks=owner_range_dict,
+                                                                                            step=None,
+                                                                                            value=[min_owner,max_owner]),
+                                                                            html.Small("Minimum amount of reviews"),
+                                                                            dcc.Input(id=RATING_MIN_REVIEWS, type="number", min=0, max=max_reviews, step=1, value=0)
+                                                                       ]
+                                                              ),
+                                                              html.Div(
+                                                                  children=[dcc.Graph(id=RATING_DISTRIBUTION_PLOT)],
+                                                                  style=NORMAL_DIVISION_DICT | {'width': '100%',
+                                                                                                'display': 'inline-block'}
+                                                              )
+                                                          ]
+                                                 ),
+                                                 html.Div(id="Game pop text area",
+                                                          style=NORMAL_DIVISION_DICT,
+                                                          children=[html.P("Game pop text")]),
+                                                 html.Div(id=" Game pop bottom_region",
+                                                          style=NORMAL_DIVISION_DICT,
+                                                          children=[
+                                                              html.Div(dash.dash_table.DataTable())
+                                                          ])
+                                             ]
+                                    ),
+                                ]
+                        ),
                         dcc.Tab(label="Market performance", value="tab4",
                                 style=TAB_NORMAL_DICT, selected_style=TAB_HIGHLIGHT_DICT),
                         dcc.Tab(label="Market prediction tool", value="tab5",
@@ -468,6 +550,7 @@ def initialize_dash(host: str = "0.0.0.0", **kwargs):
         ],
         style={"font-family": "Tahoma"}
     )
+
     APP.run(host=host, **kwargs)
     print("The server has closed!")
 
