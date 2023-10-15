@@ -26,13 +26,13 @@ html, body {
 .dash-dropdown .Select-control {
     background-color: rgb(50, 70, 101);
 }
+
 .dash-dropdown.is-minimized .Select-value-label {
     color: rgb(235, 235, 235);
 }
 
 .dash-dropdown .Select-value-label {
     color: rgb(235, 235, 235);
-
 }
 
 .dash-dropdown .Select-menu-outer {
@@ -50,19 +50,23 @@ html, body {
 /* Track rgb(197,195,192) */
 div.scrollable::-webkit-scrollbar {
     width: 6px; /* width of the vertical scrollbar */
+    height: 6px;
     border-radius: 6px;
 }
 
 div.scrollable::-webkit-scrollbar-track {
     margin-top: 20px;
     margin-bottom: 20px;
+    margin-left: 20px;
+    margin-right: 20px;
 }
-
 
 div.scrollable::-webkit-scrollbar-thumb {
     background-color: rgb(235, 235, 235);
     border-right: none;
     border-left: none;
+    border-bottom: none;
+    border-top: none;
     border-radius: 6px;
 }
 
