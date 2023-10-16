@@ -1,8 +1,30 @@
 
-html, body {
-  height: 100%;
-  margin: 0;
-  background-color: rgb(27,40,56);
+body {
+    margin: 0;
+    padding: 0;
+    object-fit: fill;
+    height: 100%;
+    width: 100%;
+    background-color: rgb(27,40,56);
+    color: rgb(235,235,235);
+
+}
+
+.navbar {
+    background-color: rgb(23,29,37);
+    color: rgb(197,195,192);
+    width: 100%;
+    margin:0;
+}
+
+.nav-item-1 {
+   color: rgb(197,195,192);
+    font-size: 30px;
+}
+
+.nav-link {
+    color: rgb(197,195,192);
+    font-size: 20px;
 }
 #app-container {
   height: 100%;
@@ -43,9 +65,6 @@ html, body {
     border-bottom: 2px solid rgb(37,55,77);
 }
 
-.dark_plot{
-    background-color: black;
-}
 
 /* Track rgb(197,195,192) */
 div.scrollable::-webkit-scrollbar {
@@ -55,10 +74,7 @@ div.scrollable::-webkit-scrollbar {
 }
 
 div.scrollable::-webkit-scrollbar-track {
-    margin-top: 20px;
-    margin-bottom: 20px;
-    margin-left: 20px;
-    margin-right: 20px;
+    margin: 20px;
 }
 
 div.scrollable::-webkit-scrollbar-thumb {
