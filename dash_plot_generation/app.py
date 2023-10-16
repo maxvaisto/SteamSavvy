@@ -19,21 +19,17 @@ APP = dash.Dash(
                           'https://codepen.io/chriddyp/pen/bWLwgP.css']
 )
 
-# APP.css.append_css({
-#    'external_url': 'styles.css'
-# })
-
 APP.layout = html.Div([
     html.Nav(className="navbar", children=[
-        html.H6("SteamSavvy - Steam game data insights",
+        html.A("SteamSavvy - Steam game data insights", href="/",
                 style={"margin-left": "60px", "display": "inline-block"},
                 className="nav-item-1"),
         html.A('About', className="nav-item nav-link btn", href='/about',
                style={"margin-left": "150px"},),
         html.A('Dashboard', className="nav-item nav-link btn", href='/dashboard',
                style={"margin-left": "150px"}),
-        html.A('Technical report', className="nav-item nav-link active btn", href='/Documentation/Report',
-               style={"margin-left": "150px"})
+        html.A('Technical report', className="nav-item nav-link active btn",
+               href="", download='dark city.jpg', style={"margin-left": "150px"})
     ]),
 
     dash.page_container
@@ -56,9 +52,6 @@ def update_dev_info(dev_name):
     # Remove empty rows
     mask = FULL_DATA.developer.apply(lambda x: dev_name in x if isinstance(x, str) else False)
     dev_data = FULL_DATA[mask]
-
-    # Engineer revenue data into the dataframe
-    # add_game_revenues_and_owner_means(dev_data)
 
     # Top games
     dev_top_games_label = get_top_revenue_game_labels(dev_data)

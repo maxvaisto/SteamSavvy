@@ -307,7 +307,6 @@ layout = html.Div(
 
 dash.register_page(
     __name__,
-    path_template="/stocks/<ticker>",
     title="Dashboard",
     description="Main dashboard",
     path="/dashboard",
