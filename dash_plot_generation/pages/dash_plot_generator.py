@@ -2,17 +2,17 @@ import numpy
 import dash
 from dash import html, dcc
 from plotly import graph_objects as go
-
-from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_SLIDER, RATING_TABLE, \
-    RATING_DISTRIBUTION_PLOT, MAIN_PANEL_TAB_DICT, DEV_AVERAGE_RATING_LABEL, \
+from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_SLIDER, MAIN_PANEL_TAB_DICT, \
+    DEV_AVERAGE_RATING_LABEL, \
     DEFAULT_PLOT_STYLE_DICT, WHITE_STEAM, TAB_COLOR, TAB_EDGE, DEFAULT_TABS_DICT, DEVELOPER_DROPDOWN, TAB_NORMAL_DICT, \
     TAB_HIGHLIGHT_DICT, PANEL_DEFAULT_DICT, SMALL_PANEL_DICT, SMALL_TAB_PANEL_DICT, SMALL_PANEL_HEADER_DICT, \
     DEV_TOP_GENRES_LABEL, LIST_DICT, NORMAL_DIVISION_DICT, DEV_CCU_LABEL, DEV_GAME_COUNT_LABEL, DEV_REV_PER_GAME_LABEL, \
-    DEV_REVENUE_LABEL, DEV_TOP_GAMES, RATING_TABS, RATING_TABS_OUTPUT_AREA
+    DEV_REVENUE_LABEL, DEV_TOP_GAMES, RATING_TABS, RATING_TABS_OUTPUT_AREA, GENRE_DROPDOWN, GENRE_PREDICTION_GRAPH
 
 from dash_plot_generation.data_store import FULL_DATA, OWNER_RANGE_PARTS_SORTED
+from dash_plot_generation.utils import get_all_genres
 
-global APP
+global APP, FULL_DATA
 
 # unique_publishers = extract_unique_companies(df["publisher"].apply(lambda x: split_companies(x)))
 # unique_developers = extract_unique_companies(df["developer"].iloc[0:10].apply(lambda x: split_companies(x)))
@@ -28,6 +28,7 @@ genre_revenue = {key: val for (key, val) in
                  zip(["Action", "Adventure", "RPG", "Puzzle", "Strategy", "Other"],
                      [0.5, 0.4, 0.3, 0.4, 0.6, 0.7])}
 
+unique_genres = get_all_genres(FULL_DATA)
 # Game popularity filter values
 max_reviews = numpy.nanmax(FULL_DATA.apply(lambda x: x["positive"] + x["negative"], axis=1))
 owner_range_dict = {index: val_str for (index, (val, val_str)) in enumerate(OWNER_RANGE_PARTS_SORTED)}
@@ -106,12 +107,12 @@ layout = html.Div(
                                         html.Div(children=[
                                             html.Div(children=[
                                                 html.P("Selected genre:", style={'margin-bottom': '10px'}),
-                                                dcc.Dropdown(id="genre_dropdown", value="action",
+                                                dcc.Dropdown(id=GENRE_DROPDOWN, value="Action",
                                                              options=[{"label": html.Span([genre],
                                                                                           style={
                                                                                               'color': WHITE_STEAM}),
                                                                        "value": genre} for genre in
-                                                                      ["action"]],
+                                                                      unique_genres],
                                                              style={'color': WHITE_STEAM, 'display': 'inline-block',
                                                                     'width': '50%'},
                                                              className='dash-dropdown',
@@ -120,8 +121,8 @@ layout = html.Div(
                                             ],
                                                 style={'width': '100%', 'margin-bottom': '50px'})
                                         ]),
-                                        dcc.Graph(figure=go.Figure(layout=DEFAULT_PLOT_STYLE_DICT |
-                                                                          dict(title="Genre prediction plot",
+                                        dcc.Graph(id=GENRE_PREDICTION_GRAPH, figure=go.Figure(layout=DEFAULT_PLOT_STYLE_DICT |
+                                                                                                     dict(title="Genre prediction plot",
                                                                                margin=dict(l=20, r=20,
                                                                                            t=50, b=20)))),
                                         html.P("""This is an individual regression estimate for the genre that represents

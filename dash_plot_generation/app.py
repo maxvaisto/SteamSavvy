@@ -3,13 +3,15 @@ import pandas
 from dash import html, dash, Output, Input, dcc
 from dash.exceptions import PreventUpdate
 
-from dash_plot_generation.data_store import initialize_data, OWNER_RANGE_PARTS_SORTED, FULL_DATA
+from Project_data_processor_ML import get_genre_plot
+from dash_plot_generation.data_store import initialize_data, FULL_DATA, OWNER_RANGE_PARTS_SORTED, LABEL_ENCODED_DATASET
+from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_SLIDER, RATING_TABLE, \
+    DEV_AVERAGE_RATING_LABEL, DENSITY_LAYOUT_STYLE, WHITE_STEAM, TAB_COLOR, TAB_EDGE, \
+    TAB_HEADER_COLOR, DEVELOPER_DROPDOWN, DEV_TOP_GENRES_LABEL, DEV_CCU_LABEL, DEV_GAME_COUNT_LABEL, \
+    DEV_REV_PER_GAME_LABEL, DEV_REVENUE_LABEL, DEV_TOP_GAMES, RATING_TABS, RATING_TABS_OUTPUT_AREA, \
+    GENRE_PREDICTION_GRAPH, GENRE_DROPDOWN, DEFAULT_PLOT_STYLE_DICT
 from dash_plot_generation.utils import get_average_user_rating_label, get_game_count_label, get_top_revenue_game_labels, \
     get_total_revenue_label, get_top_genre_labels, get_ccu_label, get_average_game_rev_label
-from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_SLIDER, RATING_TABLE, \
-    RATING_DISTRIBUTION_PLOT, DEV_AVERAGE_RATING_LABEL, DENSITY_LAYOUT_STYLE, WHITE_STEAM, TAB_COLOR, TAB_EDGE, \
-    TAB_HEADER_COLOR, DEVELOPER_DROPDOWN, DEV_TOP_GENRES_LABEL, DEV_CCU_LABEL, DEV_GAME_COUNT_LABEL, \
-    DEV_REV_PER_GAME_LABEL, DEV_REVENUE_LABEL, DEV_TOP_GAMES, RATING_TABS, RATING_TABS_OUTPUT_AREA
 from visual_presentation.Distribution_of_review_rating import get_rating_density_plot
 
 APP = dash.Dash(
@@ -45,7 +47,6 @@ APP.layout = html.Div([
                Output(DEV_AVERAGE_RATING_LABEL, "children")],
               inputs=[Input(DEVELOPER_DROPDOWN, "value")])
 def update_dev_info(dev_name):
-    global FULL_DATA, OWNER_RANGE_PARTS_SORTED
     if not (dev_name and isinstance(FULL_DATA, pandas.DataFrame)):
         raise PreventUpdate
 
@@ -111,6 +112,21 @@ def update_density_filter_plot(rating_range, min_reviews, active_tab):
 
     return [output]
 
+
+@APP.callback(Output(GENRE_PREDICTION_GRAPH, "figure"),
+              Input(GENRE_DROPDOWN, "value")
+              )
+def get_genre_prediction_table(genre, **kwargs):
+
+    if "layout" not in kwargs.keys():
+        kwargs["layout"] = DEFAULT_PLOT_STYLE_DICT | dict(
+            title="Genre future prediction",
+            margin=dict(l=20, r=20,
+                        t=50, b=20)
+
+        )
+    fig = get_genre_plot(LABEL_ENCODED_DATASET, genre, **kwargs)
+    return fig
 
 if __name__ == "__main__":
     initialize_data()

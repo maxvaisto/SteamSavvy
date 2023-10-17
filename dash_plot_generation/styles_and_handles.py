@@ -72,3 +72,5 @@ NORMAL_DIVISION_DICT = SMALL_PANEL_DICT | {'width': '60%', 'height': '100%', 'ma
                                            'margin-bottom': '5%', 'background-color': TAB_COLOR}
 RATING_TABS = "rating_tabs"
 RATING_TABS_OUTPUT_AREA = "table-area"
+GENRE_DROPDOWN = "genre_dropdown"
+GENRE_PREDICTION_GRAPH = "Genre_prediction_graph"

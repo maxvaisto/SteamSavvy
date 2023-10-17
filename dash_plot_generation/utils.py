@@ -202,3 +202,16 @@ def get_average_game_rev_label(data):
     dev_game_revenue_per_game_row = label_with_rev("Average", game_revenue_per_game_raw, SPACE_NORMAL_ENTRY, ".", "$")
     dev_game_revenue_per_game = " ".join(["•", dev_game_revenue_per_game_row])
     return dev_game_revenue_per_game
+
+def get_all_genres(df):
+    unique_genres = set()
+    try:
+        for index, row in df.iterrows():
+                if not isinstance(row.genres, str):
+                    continue
+                fully_split = row.genres.split(", ")
+                unique_genres.update(fully_split)
+    except Exception as ex:
+        pass
+    return unique_genres
+
