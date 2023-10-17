@@ -51,8 +51,7 @@ DEFAULT_TABS_DICT = {'width': 'auto', 'display': 'flex',
                      'background-color': TAB_COLOR, 'border-color': TAB_EDGE}
 TAB_NORMAL_DICT = {'background-color': TAB_COLOR, 'color': TITLE_WHITE_STEAM,
                    'border': '0px solid',
-                   'font-size': '15px',
-                   'border_bottom': '2px solid ' + TAB_EDGE}
+                   'font-size': '15px'}
 TAB_HIGHLIGHT_DICT = {'backgroundColor': TAB_HEADER_COLOR, 'color': 'white', "border-color": "transparent",
                       'font-size': '15px'}
 PANEL_DEFAULT_DICT = {'display': 'inline-block',

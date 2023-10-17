@@ -34,7 +34,6 @@ owner_range_dict = {index: val_str for (index, (val, val_str)) in enumerate(OWNE
 min_owner = min(owner_range_dict.keys())
 max_owner = max(owner_range_dict.keys())
 
-
 layout = html.Div(
     children=[
         html.Div(className="row", children=[
@@ -143,13 +142,24 @@ layout = html.Div(
                                          children=[
                                              html.Div(id="Game pop top div",
                                                       children=[
+
+                                                          html.Div(children=[html.P("""The free to play market has taken the 
+                                                          video game market by storm. It is, however, not clear
+                                                          which games in each category are performing the best in terms 
+                                                          of user rating. This section contains tools to analyze the
+                                                          distribution of user ratings for both free and non-free games
+                                                          based on the game amount of owners the games have and on a
+                                                          minimum review amount criteria.""",
+                                                                                    className="text-note-text")],
+                                                                   className='text-note-div'),
                                                           html.Div(id="game popularity filters",
                                                                    style=NORMAL_DIVISION_DICT | {'width': '100%',
                                                                                                  'height': '100%',
                                                                                                  'margin_left': '0px',
                                                                                                  'margin_right': '0px',
                                                                                                  'background-color': TAB_COLOR,
-                                                                                                 'display': 'inline-block'},
+                                                                                                 'display': 'inline-block',
+                                                                                                 'margin-bottom': '10px'},
 
                                                                    children=[
                                                                        html.P("Filters"),
@@ -160,10 +170,21 @@ layout = html.Div(
                                                                                        step=None,
                                                                                        value=[min_owner,
                                                                                               max_owner]),
-                                                                       html.Small("Minimum amount of reviews"),
+                                                                       html.Small("Minimum amount of reviews"
+                                                                                  , style={'vertical-align': 'middle'}),
                                                                        dcc.Input(id=RATING_MIN_REVIEWS,
                                                                                  type="number", min=0,
-                                                                                 max=max_reviews, step=1, value=0)
+                                                                                 max=max_reviews, step=1, value=0,
+                                                                                 style={'background-color': TAB_COLOR,
+                                                                                        'color': WHITE_STEAM,
+                                                                                        'border': '2px solid ' + WHITE_STEAM,
+                                                                                        'width': '80px',
+                                                                                        'height': '20px',
+                                                                                        'vertical-align': 'middle',
+                                                                                        'margin-left': '10px',
+                                                                                        'padding-right': '2px',
+                                                                                        'padding-left': '5px'})
+
                                                                    ]
                                                                    ),
                                                           html.Div(
