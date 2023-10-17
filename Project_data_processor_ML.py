@@ -67,7 +67,7 @@ def genre_data_aggregation(data, interval):
     data["genres"] = data["genres"].apply(lambda x: str(x).split(","))
 
     # preprocess the release date column into the pandas datetime format
-    data['release_date'] = pd.to_datetime(data['release_date'], dayfirst=True, format="mixed")
+    data['release_date'] = pd.to_datetime(data['release_date'], dayfirst=True, format="mixed", errors='coerce')
     
     # remove whitespaces
     data['genres'] = data['genres'].map(lambda x: list(map(str.strip, x)))
