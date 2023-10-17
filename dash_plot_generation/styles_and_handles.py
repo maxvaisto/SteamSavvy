@@ -56,16 +56,19 @@ TAB_HIGHLIGHT_DICT = {'backgroundColor': TAB_HEADER_COLOR, 'color': 'white', "bo
                       'font-size': '15px'}
 PANEL_DEFAULT_DICT = {'display': 'inline-block',
                       'background-color': TAB_COLOR, 'border': '2px solid', 'border-color': TAB_EDGE,
-                      'color': WHITE_STEAM, 'height': '600px'}
+                      'color': WHITE_STEAM, 'height': '720px'}
 SMALL_PANEL_DICT = {'float': 'left', 'background-color': 'transparent', 'box-sizing': 'border-box',
                     'padding': '10px'}
-SMALL_TAB_PANEL_DICT = SMALL_PANEL_DICT | {'width': '48%', 'height': '100%',
-                                           'margin-bottom': '50px',
-                                           'padding-top': '4%', 'padding-bottom': '5%', 'padding-left': '5%',
+SMALL_TAB_PANEL_DICT = SMALL_PANEL_DICT | {'width': '48%', 'height': '75%',
+                                           'margin-bottom': '0px',
+                                           'padding-top': '4%', 'padding-bottom': '0%', 'padding-left': '5%',
                                            'padding-right': '5%',
-                                           'margin-top': '20px'
+                                           'margin-top': '0px',
+                                           'overflow': 'auto'
                                            }
-SMALL_PANEL_HEADER_DICT = {'text-align': 'center', 'padding-top': '5%', 'padding-bottom': '2%'}
+SMALL_PANEL_HEADER_DICT = {'text-align': 'center', 'padding-top': '2%', 'padding-bottom': '2%'}
 LIST_DICT = {'display': 'inline-block', 'margin-bottom': '0px', 'padding-right': '0px'}
 NORMAL_DIVISION_DICT = SMALL_PANEL_DICT | {'width': '60%', 'height': '100%', 'margin-right': '5%', 'padding-left': '5%',
                                            'margin-bottom': '5%', 'background-color': TAB_COLOR}
+RATING_TABS = "rating_tabs"
+RATING_TABS_OUTPUT_AREA = "table-area"

@@ -8,7 +8,7 @@ from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_S
     DEFAULT_PLOT_STYLE_DICT, WHITE_STEAM, TAB_COLOR, TAB_EDGE, DEFAULT_TABS_DICT, DEVELOPER_DROPDOWN, TAB_NORMAL_DICT, \
     TAB_HIGHLIGHT_DICT, PANEL_DEFAULT_DICT, SMALL_PANEL_DICT, SMALL_TAB_PANEL_DICT, SMALL_PANEL_HEADER_DICT, \
     DEV_TOP_GENRES_LABEL, LIST_DICT, NORMAL_DIVISION_DICT, DEV_CCU_LABEL, DEV_GAME_COUNT_LABEL, DEV_REV_PER_GAME_LABEL, \
-    DEV_REVENUE_LABEL, DEV_TOP_GAMES, DARK_BLUE_STEAM
+    DEV_REVENUE_LABEL, DEV_TOP_GAMES, RATING_TABS, RATING_TABS_OUTPUT_AREA
 
 from dash_plot_generation.data_store import FULL_DATA, OWNER_RANGE_PARTS_SORTED
 
@@ -158,7 +158,6 @@ layout = html.Div(
                                                                                                  'margin_left': '0px',
                                                                                                  'margin_right': '0px',
                                                                                                  'background-color': TAB_COLOR,
-                                                                                                 'display': 'inline-block',
                                                                                                  'margin-bottom': '10px'},
 
                                                                    children=[
@@ -173,8 +172,8 @@ layout = html.Div(
                                                                        html.Small("Minimum amount of reviews"
                                                                                   , style={'vertical-align': 'middle'}),
                                                                        dcc.Input(id=RATING_MIN_REVIEWS,
-                                                                                 type="number", min=0,
-                                                                                 max=max_reviews, step=1, value=0,
+                                                                                 type="number", min=1,
+                                                                                 max=max_reviews, step=1, value=10,
                                                                                  style={'background-color': TAB_COLOR,
                                                                                         'color': WHITE_STEAM,
                                                                                         'border': '2px solid ' + WHITE_STEAM,
@@ -187,21 +186,38 @@ layout = html.Div(
 
                                                                    ]
                                                                    ),
-                                                          html.Div(
-                                                              children=[dcc.Graph(id=RATING_DISTRIBUTION_PLOT)],
-                                                              style=NORMAL_DIVISION_DICT | {'width': '100%',
-                                                                                            'display': 'inline-block'}
-                                                          )
+
                                                       ]
                                                       ),
+
                                              html.Div(id="Game pop bottom_region",
-                                                      style=NORMAL_DIVISION_DICT | {'width': '90%',
-                                                                                    'overflow': 'auto',
-                                                                                    'height': '70%'},
-                                                      className="scrollable",
+                                                      style=NORMAL_DIVISION_DICT | {'width': '90%'},
                                                       children=[
-                                                          html.Div(dash.dash_table.DataTable(id=RATING_TABLE
-                                                                                             ))
+                                                          dcc.Tabs(
+                                                              id=RATING_TABS,
+                                                              value="plot",
+                                                              style=DEFAULT_TABS_DICT,
+                                                              children=[
+                                                                  dcc.Tab(value="plot",
+                                                                          label="Distribution figure",
+                                                                          style=TAB_NORMAL_DICT,
+                                                                          selected_style=TAB_HIGHLIGHT_DICT | {
+                                                                                         'background-color': 'rgb(50, 70, 101)'}),
+                                                                  dcc.Tab(label="Top non-free games",
+                                                                          value="non-free",
+                                                                          style=TAB_NORMAL_DICT,
+                                                                          selected_style=TAB_HIGHLIGHT_DICT | {
+                                                                              'background-color': 'rgb(50, 70, 101)'}),
+                                                                  dcc.Tab(label="Top free games",
+                                                                          value="free",
+                                                                          style=TAB_NORMAL_DICT,
+                                                                          selected_style=TAB_HIGHLIGHT_DICT | {
+                                                                              'background-color': 'rgb(50, 70, 101)'})
+                                                              ]
+                                                          ),
+                                                          html.Div(className="scrollable div-with_scroll",
+                                                                   children=[html.Div(id=RATING_TABS_OUTPUT_AREA)])
+
                                                       ])
                                          ]
                                          ),
@@ -234,7 +250,7 @@ layout = html.Div(
                                     children=[
                                         html.Div(
                                             children=[html.P("Revenue", style=SMALL_PANEL_HEADER_DICT)],
-                                            style={'margin-bottom': '10%',
+                                            style={'margin-bottom': '10px',
                                                    'border-bottom': '2px solid ' + TAB_EDGE}),
                                         html.Div(children=[
                                             html.Div(children=[
@@ -255,10 +271,11 @@ layout = html.Div(
                                                     html.Small(id=DEV_TOP_GAMES, children="Half life 2"),
                                                 ])
                                             ]),
-                                        ], style={'padding-left': '5%', 'padding-right': '5%',
-                                                  'padding-bottom': '5%'})
+                                        ])
                                     ],
-                                    style=SMALL_TAB_PANEL_DICT | {'margin-right': '20px', 'margin-left': '0px'}
+                                    style=SMALL_TAB_PANEL_DICT | {'margin-right': '20px', 'margin-left': '0px',
+                                                                  'border': '1px solid black',
+                                                                  'margin-bottom': '0px', 'height':'100%'}
                                 ),
                                 html.Div(children=[
                                     html.Div(
@@ -266,7 +283,7 @@ layout = html.Div(
                                             html.Div(
                                                 children=[html.P("General information",
                                                                  style=SMALL_PANEL_HEADER_DICT)],
-                                                style={'margin-bottom': '30px',
+                                                style={'margin-bottom': '10px',
                                                        'border-bottom': '2px solid ' + TAB_EDGE}),
                                             html.Div(children=[
                                                 html.Div(children=[
@@ -297,10 +314,18 @@ layout = html.Div(
                                         ])
 
                                 ], style=SMALL_TAB_PANEL_DICT | {'width': '45%', 'height': '100%',
-                                                                 'margin-right': '0px', 'margin-left': '20px'}
+                                                                 'margin-right': '0px', 'margin-left': '20px',
+                                                                 'border': '1px solid black'}
                                 )
-                            ], style={'height': '100%'})
-                        ], style={'margin-left': '20px', 'margin-right': '0px'}
+                            ], style={'height': '300px', 'overflow':'auto', 'margin-bottom':'20px', 'border': '1px solid black'},
+                            ),
+                            html.Div(
+                                children=[dcc.Graph(style=DEFAULT_PLOT_STYLE_DICT |{'height': '250px', 'width':'100%'})
+                                          ]
+                            )
+                        ],
+                        style={'margin-left': '0px', 'margin-right': '0px'},
+                        className="scrollable"
                         )
                     ], style=TAB_NORMAL_DICT, selected_style=TAB_HIGHLIGHT_DICT),
                     dcc.Tab(label="Publisher information", value="tab4", children=[

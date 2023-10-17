@@ -1,6 +1,6 @@
 import dash
 import pandas
-from dash import html, dash, Output, Input
+from dash import html, dash, Output, Input, dcc
 from dash.exceptions import PreventUpdate
 
 from dash_plot_generation.data_store import initialize_data, OWNER_RANGE_PARTS_SORTED, FULL_DATA
@@ -9,7 +9,7 @@ from dash_plot_generation.utils import get_average_user_rating_label, get_game_c
 from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_SLIDER, RATING_TABLE, \
     RATING_DISTRIBUTION_PLOT, DEV_AVERAGE_RATING_LABEL, DENSITY_LAYOUT_STYLE, WHITE_STEAM, TAB_COLOR, TAB_EDGE, \
     TAB_HEADER_COLOR, DEVELOPER_DROPDOWN, DEV_TOP_GENRES_LABEL, DEV_CCU_LABEL, DEV_GAME_COUNT_LABEL, \
-    DEV_REV_PER_GAME_LABEL, DEV_REVENUE_LABEL, DEV_TOP_GAMES
+    DEV_REV_PER_GAME_LABEL, DEV_REVENUE_LABEL, DEV_TOP_GAMES, RATING_TABS, RATING_TABS_OUTPUT_AREA
 from visual_presentation.Distribution_of_review_rating import get_rating_density_plot
 
 APP = dash.Dash(
@@ -22,10 +22,10 @@ APP = dash.Dash(
 APP.layout = html.Div([
     html.Nav(className="navbar", children=[
         html.A("SteamSavvy - Steam game data insights", href="/",
-                style={"margin-left": "60px", "display": "inline-block"},
-                className="nav-item-1"),
+               style={"margin-left": "60px", "display": "inline-block"},
+               className="nav-item-1"),
         html.A('About', className="nav-item nav-link btn", href='/about',
-               style={"margin-left": "150px"},),
+               style={"margin-left": "150px"}, ),
         html.A('Dashboard', className="nav-item nav-link btn", href='/dashboard',
                style={"margin-left": "150px"}),
         html.A('Technical report', className="nav-item nav-link active btn",
@@ -76,26 +76,40 @@ def update_dev_info(dev_name):
         user_rating_value
 
 
-@APP.callback(Output(RATING_DISTRIBUTION_PLOT, "figure"),
-              Output("Game pop bottom_region", 'children'),
+@APP.callback(Output(RATING_TABS_OUTPUT_AREA, 'children'),
               Input(RATING_SLIDER, "value"),
-              Input(RATING_MIN_REVIEWS, "value"))
-def update_density_filter_plot(rating_range, min_reviews):
+              Input(RATING_MIN_REVIEWS, "value"),
+              Input(RATING_TABS, "value"))
+def update_density_filter_plot(rating_range, min_reviews, active_tab):
     allowed_indexes = [str_val for (val, str_val) in OWNER_RANGE_PARTS_SORTED[rating_range[0]:rating_range[1] + 1]]
     allowed_ratings = [" .. ".join([val, allowed_indexes[i + 1]]) for (i, val) in enumerate(allowed_indexes)
                        if i < len(allowed_indexes) - 1]
+    data = get_rating_density_plot(FULL_DATA, allowed_ratings, min_reviews, layout=DENSITY_LAYOUT_STYLE)
+    table_data_key = None
+    output_table = False
+    output = None
+    match active_tab:
+        case "free":
+            table_data_key = "free"
+            output_table = True
+        case "plot":
+            output = html.Div(dcc.Graph(figure=data['fig']))
+        case "non-free":
+            table_data_key = "non_free"
+            output_table = True
+        case _:
+            raise KeyError("Invalid tab name")
+    if output_table:
+        output = html.Div(dash.dash_table.DataTable(data['top_games'][table_data_key].to_dict('records'),
+                                                    id=RATING_TABLE,
+                                                    style_data={'backgroundColor': TAB_COLOR,
+                                                                'color': WHITE_STEAM,
+                                                                'border': '1px solid ' + TAB_EDGE},
+                                                    style_header={'backgroundColor': TAB_HEADER_COLOR,
+                                                                  'color': WHITE_STEAM,
+                                                                  'border': '1px solid ' + TAB_EDGE}))
 
-    output = get_rating_density_plot(FULL_DATA, allowed_ratings, min_reviews, layout=DENSITY_LAYOUT_STYLE)
-    table = html.Div(dash.dash_table.DataTable(output['top_games']['non_free'].to_dict('records'),
-                                               id=RATING_TABLE,
-
-                                               style_data={'backgroundColor': TAB_COLOR,
-                                                           'color': WHITE_STEAM,
-                                                           'border': '1px solid ' + TAB_EDGE},
-                                               style_header={'backgroundColor': TAB_HEADER_COLOR,
-                                                             'color': WHITE_STEAM,
-                                                             'border': '1px solid ' + TAB_EDGE}))
-    return output['fig'], [table]
+    return [output]
 
 
 if __name__ == "__main__":

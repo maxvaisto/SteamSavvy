@@ -1,5 +1,6 @@
 
 body {
+    font-family: Tahoma, serif;
     margin: 0;
     padding: 0;
     object-fit: fill;
@@ -172,4 +173,9 @@ div.scrollable::-webkit-scrollbar-track-piece:start {
     margin-left: 70px;
     margin-right: 70px;
     margin-bottom: 20px;
+}
+
+.div-with_scroll{
+    overflow: auto;
+    height: 100%;
 }
