@@ -1,7 +1,6 @@
 # Introduction to Data Science, Luento-opetus, 2023
 # Sergei Panarin
-
-
+from typing import Dict, Any
 
 # Data preprocessing
 
@@ -17,6 +16,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 from math import isnan
+import plotly.express as go
 
 
 # Reading the data from source:
@@ -67,7 +67,7 @@ def genre_data_aggregation(data, interval):
     data["genres"] = data["genres"].apply(lambda x: str(x).split(","))
 
     # preprocess the release date column into the pandas datetime format
-    data['release_date'] = pd.to_datetime(data['release_date'], dayfirst=True, format="mixed")
+    data['release_date'] = pd.to_datetime(data['release_date'], dayfirst=True, format="mixed", errors='coerce')
     
     # remove whitespaces
     data['genres'] = data['genres'].map(lambda x: list(map(str.strip, x)))
@@ -142,11 +142,21 @@ def lin_reg(df):
     #model.score(X_train, y_train) #check score
     return model
 
-# Plot the given genre data 
-def get_genre_plot(dict_data: object, genre: object) -> object:
+
+# Plot the given genre data
+def plot_genre_plot(dict_data: object, genre: object) -> object:
     plt.scatter(dict_data[genre]["release_date"], dict_data[genre]["owners"])
     plt.show()
-    
+
+
+# Plots the release date against owners
+def get_genre_plot(dict_data: object, genre: object, style: Dict[Any] = None) -> object:
+
+    fig = go.scatter(x=dict_data[genre]["release_date"], y=dict_data[genre]["owners"])
+    if style:
+        fig.update(style=style)
+    return fig
+
 def get_data_interval(days):
     base = dt.datetime.now()
     
@@ -171,7 +181,7 @@ if __name__ == "__main__":
     
     genre = "Free to Play"
     
-    get_genre_plot(genre_data, genre)
+    plot_genre_plot(genre_data, genre)
     
     # 730 days = 2 years
     dates = np.array(get_data_interval(730))
