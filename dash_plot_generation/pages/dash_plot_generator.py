@@ -7,17 +7,18 @@ from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_S
     DEFAULT_PLOT_STYLE_DICT, WHITE_STEAM, TAB_COLOR, TAB_EDGE, DEFAULT_TABS_DICT, DEVELOPER_DROPDOWN, TAB_NORMAL_DICT, \
     TAB_HIGHLIGHT_DICT, PANEL_DEFAULT_DICT, SMALL_PANEL_DICT, SMALL_TAB_PANEL_DICT, SMALL_PANEL_HEADER_DICT, \
     DEV_TOP_GENRES_LABEL, LIST_DICT, NORMAL_DIVISION_DICT, DEV_CCU_LABEL, DEV_GAME_COUNT_LABEL, DEV_REV_PER_GAME_LABEL, \
-    DEV_REVENUE_LABEL, DEV_TOP_GAMES, RATING_TABS, RATING_TABS_OUTPUT_AREA, GENRE_DROPDOWN, GENRE_PREDICTION_GRAPH
+    DEV_REVENUE_LABEL, DEV_TOP_GAMES, RATING_TABS, RATING_TABS_OUTPUT_AREA, GENRE_DROPDOWN, GENRE_PREDICTION_GRAPH, \
+    GAMES_BY_DEV_GRAPH
 
 from dash_plot_generation.data_store import FULL_DATA, OWNER_RANGE_PARTS_SORTED
-from dash_plot_generation.utils import get_all_genres
+from dash_plot_generation.utils import get_all_genres, extract_unique_companies, split_companies
 
 global APP, FULL_DATA
 
-# unique_publishers = extract_unique_companies(df["publisher"].apply(lambda x: split_companies(x)))
-# unique_developers = extract_unique_companies(df["developer"].iloc[0:10].apply(lambda x: split_companies(x)))
-unique_publishers = ["Valve"]
-unique_developers = ["Valve"]
+unique_publishers = extract_unique_companies(FULL_DATA["publisher"].apply(lambda x: split_companies(x)))
+unique_developers = extract_unique_companies(FULL_DATA["developer"].apply(lambda x: split_companies(x)))
+# unique_publishers = ["Valve"]
+# unique_developers = ["Valve"]
 
 # Genre performance table_values
 # genre_owners, genre_revenue = get_genre_popularity_counts(FULL_DATA, 6)
@@ -275,7 +276,6 @@ layout = html.Div(
                                         ])
                                     ],
                                     style=SMALL_TAB_PANEL_DICT | {'margin-right': '20px', 'margin-left': '0px',
-                                                                  'border': '1px solid black',
                                                                   'margin-bottom': '0px', 'height':'100%'}
                                 ),
                                 html.Div(children=[
@@ -315,13 +315,12 @@ layout = html.Div(
                                         ])
 
                                 ], style=SMALL_TAB_PANEL_DICT | {'width': '45%', 'height': '100%',
-                                                                 'margin-right': '0px', 'margin-left': '20px',
-                                                                 'border': '1px solid black'}
+                                                                 'margin-right': '0px', 'margin-left': '20px'}
                                 )
-                            ], style={'height': '300px', 'overflow':'auto', 'margin-bottom':'20px', 'border': '1px solid black'},
+                            ], style={'height': '300px', 'overflow':'auto', 'margin-bottom':'20px'},
                             ),
                             html.Div(
-                                children=[dcc.Graph(style=DEFAULT_PLOT_STYLE_DICT |{'height': '250px', 'width':'100%'})
+                                children=[dcc.Graph(id=GAMES_BY_DEV_GRAPH, style=DEFAULT_PLOT_STYLE_DICT | {'height': '250px', 'width': '100%'})
                                           ]
                             )
                         ],
