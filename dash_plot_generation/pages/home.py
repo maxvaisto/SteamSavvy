@@ -10,7 +10,7 @@ layout = html.Div(
     html.Div(children=[
         html.H1('SteamSavvy',
                 className="heading-1"),
-        html.H3("Steam API data analysis dashboard",
+        html.H3("Steam API data analysis dashboard.",
                 className="heading-3"),
         # html.H4('Discover the full potential of steam data for market analysis.', className="heading-3"),
         html.Div(

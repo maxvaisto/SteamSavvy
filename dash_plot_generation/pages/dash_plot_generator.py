@@ -11,7 +11,8 @@ from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_S
     GAMES_BY_DEV_GRAPH
 
 from dash_plot_generation.data_store import FULL_DATA, OWNER_RANGE_PARTS_SORTED
-from dash_plot_generation.utils import get_all_genres, extract_unique_companies, split_companies
+from dash_plot_generation.utils import get_all_genres, extract_unique_companies, split_companies, \
+    get_genre_popularity_counts
 
 global APP, FULL_DATA
 
@@ -21,13 +22,13 @@ unique_developers = extract_unique_companies(FULL_DATA["developer"].apply(lambda
 # unique_developers = ["Valve"]
 
 # Genre performance table_values
-# genre_owners, genre_revenue = get_genre_popularity_counts(FULL_DATA, 6)
-genre_owners = {key: val for (key, val) in
-                zip(["Action", "Adventure", "RPG", "Puzzle", "Strategy", "Other"],
-                    [0.7, 0.5, 0.1, 0.4, 0.3, 0.7])}
-genre_revenue = {key: val for (key, val) in
-                 zip(["Action", "Adventure", "RPG", "Puzzle", "Strategy", "Other"],
-                     [0.5, 0.4, 0.3, 0.4, 0.6, 0.7])}
+genre_owners, genre_revenue = get_genre_popularity_counts(FULL_DATA, 6)
+# genre_owners = {key: val for (key, val) in
+#                 zip(["Action", "Adventure", "RPG", "Puzzle", "Strategy", "Other"],
+#                     [0.7, 0.5, 0.1, 0.4, 0.3, 0.7])}
+# genre_revenue = {key: val for (key, val) in
+#                  zip(["Action", "Adventure", "RPG", "Puzzle", "Strategy", "Other"],
+#                      [0.5, 0.4, 0.3, 0.4, 0.6, 0.7])}
 
 unique_genres = get_all_genres(FULL_DATA)
 # Game popularity filter values
@@ -135,7 +136,7 @@ layout = html.Div(
                                     style=MAIN_PANEL_TAB_DICT,
                                     className="scrollable")
                             ]),
-                    dcc.Tab(label="Game popularity", value="tab2",
+                    dcc.Tab(label="Free vs Non-free analysis", value="tab2",
                             style=TAB_NORMAL_DICT, selected_style=TAB_HIGHLIGHT_DICT,
                             children=[
                                 html.Div(id="Game pop general layout",
@@ -226,8 +227,6 @@ layout = html.Div(
                             ]
                             ),
                     dcc.Tab(label="Market performance", value="tab4",
-                            style=TAB_NORMAL_DICT, selected_style=TAB_HIGHLIGHT_DICT),
-                    dcc.Tab(label="Market prediction tool", value="tab5",
                             style=TAB_NORMAL_DICT, selected_style=TAB_HIGHLIGHT_DICT),
                 ],
                          style=DEFAULT_TABS_DICT),
