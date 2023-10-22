@@ -156,6 +156,7 @@ def plot_genre_plot(dict_data: object, genre: object) -> object:
     plt.scatter(dict_data[genre]["release_date"], dict_data[genre]["owners"])
     plt.show()
 
+# uncomment if needed
 """
 # Plots the release date against owners
 def get_genre_plot(dict_data: object, genre: object, style: Dict[Any] = None) -> object:
