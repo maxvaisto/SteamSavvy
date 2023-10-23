@@ -13,12 +13,12 @@ import numpy as np
 import datetime as dt
 import re
 
-import plotly.graph_objects
+import plotly
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 from math import isnan
-from plotly import graph_objects as go
+import plotly.graph_objects as go
 
 
 # Reading the data from source:
@@ -63,7 +63,7 @@ def label_encoding(data):
 # - Amount of purchases
 # - Interval of time (default chosen as 2 months for now)
 # @param: pandas dataframe with the full data, interval integer meaning the number of months
-# @return: pandas dataframe with genre, # of purchases, time interval columns
+# @return: list of dicts with pandas dataframes numbers of games and owners per genre per time interval
 
 def genre_data_aggregation(data, interval):
     data["genres"] = data["genres"].apply(lambda x: str(x).split(","))
@@ -91,16 +91,24 @@ def genre_data_aggregation(data, interval):
     # remove excessive columns and sort values
     # data = data[['release_date', 'genres', 'owners']].sort_values(['release_date','genres', 'owners'], ascending=[True, True, False])
 
-    dict_data = {}
-    # group by the time interval and get sum of the owners
+    owner_dict_data = {}
+    number_dict_data = {}
+    # group by the time interval and get sum of the owners and number of games
     for i in range(0, len(agg_data)):
         name = agg_data[i]['genres'].iloc[0]
-        agg_data[i] = agg_data[i].groupby(pd.Grouper(key='release_date', freq=str(interval) + "M")).agg(
-            {'owners': 'sum'})
-        agg_data[i] = agg_data[i].reset_index()
-        dict_data[name] = agg_data[i]
 
-    return dict_data
+        # group information on number of games per genre, keep name column name owners for plotting function
+        number = agg_data[i].groupby(pd.Grouper(key='release_date', freq=str(interval) + "M"))['owners'].count()
+        number = number.reset_index()
+
+        # group information on owners of games per genre
+        owners = agg_data[i].groupby(pd.Grouper(key='release_date', freq=str(interval) + "M")).agg({'owners': 'sum'})
+        owners = owners.reset_index()
+
+        owner_dict_data[name] = owners
+        number_dict_data[name] = number
+
+    return [owner_dict_data, number_dict_data]
 
 
 # Resets Index of the merged dataframe
@@ -154,8 +162,9 @@ def plot_genre_plot(dict_data: object, genre: object) -> object:
 
 
 # Plots the release date against owners
-def get_genre_plot(dict_data: object, genre: object, **figure_arguments) -> plotly.graph_objects.Figure:
-    fig = go.Figure(data=go.Scatter(x=dict_data[genre]["release_date"], y=dict_data[genre]["owners"], mode='markers'))
+def get_genre_plot(dict_data: Dict[str, Any], genre: str, **figure_arguments) -> plotly.graph_objects.Figure:
+    target_data = dict_data[genre]
+    fig = go.Figure(data=go.Scatter(x=target_data["release_date"], y=target_data["owners"], mode='markers'))
     fig.update(**figure_arguments)
 
     return fig
@@ -179,12 +188,13 @@ if __name__ == "__main__":
 
     label_encoding(full_data_df)
     data = replace_owner_str_with_average_number(full_data_df)
-    genre_data = genre_data_aggregation(full_data_df, 2)
+    owners_genre_data, number_genre_data = genre_data_aggregation(full_data_df, 2)
 
     genre = "Free to Play"
 
-    plot_genre_plot(genre_data, genre)
-    get_genre_plot(genre_data, genre)
+    plot_genre_plot(owners_genre_data, genre)
+    plot_genre_plot(number_genre_data, genre)
+
     # 730 days = 2 years
     dates = np.array(get_data_interval(730))
     dates = dates.reshape(len(dates), 1)
@@ -192,10 +202,10 @@ if __name__ == "__main__":
     # GET ALL MODELS FOR ALL GENRES
     models = {}
     predictions = {}
-    process_data = genre_data
+    process_data = owners_genre_data
     for x in process_data:
-        genre_data[x] = encode_time(genre_data[x])
-        models[x] = lin_reg(genre_data[x])
+        owners_genre_data[x] = encode_time(owners_genre_data[x])
+        models[x] = lin_reg(owners_genre_data[x])
 
     for genre in models:
         predictions[genre] = models[genre].predict(dates)

@@ -10,18 +10,12 @@ split_csv_path = os.path.join(csv_path, "file_segments")
 
 
 def initialize_data():
-    dataframe = None
-    for file in os.listdir(split_csv_path):
-        file_path = os.path.join(split_csv_path, file)
-        dataframe = pandas.concat([dataframe, pandas.read_csv(file_path)]) if dataframe is not None \
-            else pandas.read_csv(file_path)
 
+
+    dataframe = set_upmain_dataframe()
     # Create a label encoded dataframe
 
-    label_encoded_data = clean_index(dataframe.copy())
-    label_encoding(label_encoded_data)
-    replace_owner_str_with_average_number(label_encoded_data)
-    genre_data = genre_data_aggregation(label_encoded_data, 2)
+    genre_data, _ = setup_label_encoded_data(dataframe)
 
     add_game_revenues_and_owner_means(dataframe)
 
@@ -35,6 +29,24 @@ def initialize_data():
 
     # Return values
     return dataframe, sorted_owner_list, genre_data
+
+def set_upmain_dataframe():
+    dataframe = None
+    for file in os.listdir(split_csv_path):
+        file_path = os.path.join(split_csv_path, file)
+        dataframe = pandas.concat([dataframe, pandas.read_csv(file_path)]) if dataframe is not None \
+            else pandas.read_csv(file_path)
+    return dataframe
+
+
+def setup_label_encoded_data(data:pandas.DataFrame):
+    data_copy = data.copy()
+    full_data_df = clean_index(data_copy)
+    label_encoding(full_data_df)
+    data = replace_owner_str_with_average_number(full_data_df)
+    owners_genre_data, number_genre_data = genre_data_aggregation(full_data_df, 2)
+    return owners_genre_data, number_genre_data
+
 
 
 def add_game_revenues_and_owner_means(data):
