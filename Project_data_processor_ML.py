@@ -2,6 +2,7 @@
 # Sergei Panarin
 from typing import Dict, Any
 
+import pandas
 # Data preprocessing
 
 # IMPORTANT THINGS:
@@ -156,17 +157,15 @@ def lin_reg(df):
 
 
 # Plot the given genre data
-def plot_genre_plot(dict_data: object, genre: object) -> object:
+def plot_genre_plot(dict_data: object, genre: object) -> None:
     plt.scatter(dict_data[genre]["release_date"], dict_data[genre]["owners"])
     plt.show()
 
-
 # Plots the release date against owners
-def get_genre_plot(dict_data: Dict[str, Any], genre: str, **figure_arguments) -> plotly.graph_objects.Figure:
+def get_genre_plot(dict_data: Dict[str, pandas.DataFrame], genre: str, **figure_arguments) -> go.Figure:
     target_data = dict_data[genre]
     fig = go.Figure(data=go.Scatter(x=target_data["release_date"], y=target_data["owners"], mode='markers'))
     fig.update(**figure_arguments)
-
     return fig
 
 

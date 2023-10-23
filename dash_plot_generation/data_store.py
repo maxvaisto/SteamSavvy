@@ -12,7 +12,7 @@ split_csv_path = os.path.join(csv_path, "file_segments")
 def initialize_data():
 
 
-    dataframe = set_upmain_dataframe()
+    dataframe = setup_main_dataframe()
     # Create a label encoded dataframe
 
     genre_data, _ = setup_label_encoded_data(dataframe)
@@ -30,7 +30,7 @@ def initialize_data():
     # Return values
     return dataframe, sorted_owner_list, genre_data
 
-def set_upmain_dataframe():
+def setup_main_dataframe():
     dataframe = None
     for file in os.listdir(split_csv_path):
         file_path = os.path.join(split_csv_path, file)
@@ -43,7 +43,7 @@ def setup_label_encoded_data(data:pandas.DataFrame):
     data_copy = data.copy()
     full_data_df = clean_index(data_copy)
     label_encoding(full_data_df)
-    data = replace_owner_str_with_average_number(full_data_df)
+    full_data_df = replace_owner_str_with_average_number(full_data_df)
     owners_genre_data, number_genre_data = genre_data_aggregation(full_data_df, 2)
     return owners_genre_data, number_genre_data
 
