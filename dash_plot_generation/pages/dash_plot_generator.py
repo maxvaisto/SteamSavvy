@@ -7,11 +7,9 @@ from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_S
     DEFAULT_PLOT_STYLE_DICT, WHITE_STEAM, TAB_COLOR, TAB_EDGE, DEVELOPER_DROPDOWN, \
     DEV_TOP_GENRES_LABEL, DEV_CCU_LABEL, DEV_GAME_COUNT_LABEL, DEV_REV_PER_GAME_LABEL, \
     DEV_REVENUE_LABEL, DEV_TOP_GAMES, RATING_TABS, RATING_TABS_OUTPUT_AREA, GENRE_DROPDOWN, GENRE_PREDICTION_GRAPH, \
-    GAMES_BY_DEV_GRAPH
+    GAMES_BY_DEV_GRAPH, MARKET_PERFORMANCE_SCATTER, MP_COMPANY_TYPE_DROPDOWN
 
 from dash_plot_generation.data_store import FULL_DATA, OWNER_RANGE_PARTS_SORTED
-from dash_plot_generation.utils import get_all_genres, extract_unique_companies, split_companies, \
-    get_genre_popularity_counts
 
 global APP, FULL_DATA
 
@@ -229,14 +227,27 @@ layout = html.Div(
                             children=[
                                 html.Div(
                                     children=[
-                                        html.Div(id="Market performance_top",
-                                                 children=[
-                                                     html.Div(children=[dcc.Graph()],
-                                                              style={"width": "60%", "display": "inline-block"}),
-                                                     html.Div(children=[html.H5("First plot text")],
-                                                              style={"width": "30%", "display": "inline-block"})
-                                                 ]
-                                                 ),
+                                        html.Div(children=[
+                                            html.Div(children=[dcc.Graph(id=MARKET_PERFORMANCE_SCATTER,
+                                                                         figure=go.Figure(
+                                                                             layout=DEFAULT_PLOT_STYLE_DICT |
+                                                                                    dict(
+                                                                                        title="Market performance",
+                                                                                        margin=dict(l=20, r=20,
+                                                                                                    t=50,
+                                                                                                    b=20)))
+                                                                         )],
+                                                     style={"width": "60%", "vertical-align": "top",
+                                                            "display": "inline-block", "margin-right":"5%"}),
+                                            html.Div(children=[html.H5("First plot text"),
+                                                               dcc.Dropdown(id=MP_COMPANY_TYPE_DROPDOWN,
+                                                                            className='dash-dropdown',
+                                                                            value="developer",
+                                                                            options=["developer", "publisher"])],
+                                                     style={"width": "30%", "vertical-align": "top",
+                                                            "display": "inline-block"})
+                                        ], style={"display": "flex", "align-items": "flex-start", "margin-bottom":"50px"}
+                                        ),
                                         html.Div(id="Market performance_second",
                                                  children=[
                                                      html.Div(children=[dcc.Graph()],
@@ -265,7 +276,7 @@ layout = html.Div(
                                 dcc.Dropdown(id=DEVELOPER_DROPDOWN, value="Valve",
                                              options=[{"label": html.Span([developer], style={'color': WHITE_STEAM}),
                                                        "value": developer} for developer in unique_developers],
-                                             style={'margin-top': '20px', 'color': WHITE_STEAM},
+                                             style={'margin-top': '20px'},
                                              className='dash-dropdown',
                                              ),
                                 html.Div(children=[

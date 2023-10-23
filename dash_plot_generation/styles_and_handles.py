@@ -1,4 +1,3 @@
-
 # html handles
 RATING_MIN_REVIEWS = "min_reviews_id"
 RATING_SLIDER = "rating_slider"
@@ -24,7 +23,6 @@ GENRE_DROPDOWN = "genre_dropdown"
 GENRE_PREDICTION_GRAPH = "Genre_prediction_graph"
 GAMES_BY_DEV_GRAPH = "game_releases_by_dev_graph"
 
-
 SPACE_NORMAL_ENTRY = 35
 
 # Colors
@@ -48,6 +46,18 @@ DEFAULT_PLOT_STYLE_DICT = dict(
 
 DENSITY_LAYOUT_STYLE = DEFAULT_PLOT_STYLE_DICT | dict(
     title='Distribution of Game Review Rating',
-    xaxis_title="Game user rating",
+    xaxis_title="Game User Rating",
     yaxis_title="Proportion"
 )
+
+MARKET_PERFORMANCE_SCATTER = "Market_performance_scatter"
+MP_COMPANY_TYPE_DROPDOWN = "market_performance_company_type_dropdown"
+
+
+def create_market_scatter_plot_style(company_type):
+    return {
+        **DEFAULT_PLOT_STYLE_DICT,
+        'title': f'Market Performance for {company_type} companies',
+        "xaxis_title": "Revenue",
+        "yaxis_title": "Number of Game Owners",
+    }

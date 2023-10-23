@@ -7,7 +7,7 @@ from dash_plot_generation.utils import get_owner_means, convert_owners_to_limits
 
 # The function to plot the bubble chart of market performance
 
-def plot_market_performance(df, company_type: str, game_number_max: int, game_number_min: int):
+def plot_market_performance(df, company_type: str, game_number_max: int, game_number_min: int, **layout_arguments):
     
     """
     This function creates a bubble chart of market performance.
@@ -33,7 +33,7 @@ def plot_market_performance(df, company_type: str, game_number_max: int, game_nu
     # Bubble chart
     fig = px.scatter(filter_company_stats, x='revenue', y='owner_number', size='game_number', log_y=True, log_x=True,size_max = 40,
                  hover_name='company_split', title=f'Market Performance of {company_type}')
-
+    fig.update_layout(**layout_arguments)
     return fig
 
 

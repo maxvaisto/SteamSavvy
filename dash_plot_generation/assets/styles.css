@@ -137,6 +137,9 @@ body {
 .dash-dropdown .Select-menu-outer {
     background-color: var(--TAB_COLOR);
 }
+.dash-dropdown {
+    color: var(--WHITE_STEAM);
+}
 
 .jsx-4017309047.tab-container{
     border-bottom: 2px solid var(--TAB_EDGE);
