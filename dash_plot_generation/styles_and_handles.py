@@ -18,25 +18,16 @@ DEV_TOP_GENRES_LABEL = "dev_top_genres"
 DEVELOPER_DROPDOWN = "developer_dropdown"
 RATING_DISTRIBUTION_PLOT = "game_popularity_density_plot"
 DEV_AVERAGE_RATING_LABEL = "dev_average_rating"
+RATING_TABS = "rating_tabs"
+RATING_TABS_OUTPUT_AREA = "table-area"
+GENRE_DROPDOWN = "genre_dropdown"
+GENRE_PREDICTION_GRAPH = "Genre_prediction_graph"
+GAMES_BY_DEV_GRAPH = "game_releases_by_dev_graph"
 
 
-MAIN_PANEL_TAB_DICT = {'height': '550px', 'width': '100%', 'margin': '0', 'overflow': 'auto'}
 SPACE_NORMAL_ENTRY = 35
-RIGHT_SIDE_TEXT_DICT = {'display': 'inline-block',
-                        'float': 'right', 'margin-right': '0%', 'margin-bottom': '0px'}
 
-DEFAULT_PLOT_STYLE_DICT = dict(
-    template="plotly_dark",
-    plot_bgcolor="rgb(31,46,65)",
-    paper_bgcolor="rgb(31,46,65)",
-)
-
-DENSITY_LAYOUT_STYLE = DEFAULT_PLOT_STYLE_DICT | dict(
-    title='Distribution of Game Review Rating',
-    xaxis_title="Game user rating",
-    yaxis_title="Proportion"
-
-)
+# Colors
 DARK_STEAM = "rgb(23,29,37)"
 WHITE_STEAM = "rgb(235,235,235)"
 TITLE_WHITE_STEAM = "rgb(197,195,192)"
@@ -47,31 +38,16 @@ DROPDOWN_COLOR = "rgb(50,70,101"
 SMALL_PANEL_COLOR = "rgb(22,32,45)"
 TAB_HEADER_COLOR = "rgb(45,96,150)"
 
-DEFAULT_TABS_DICT = {'width': 'auto', 'display': 'flex',
-                     'background-color': TAB_COLOR, 'border-color': TAB_EDGE}
-TAB_NORMAL_DICT = {'background-color': TAB_COLOR, 'color': TITLE_WHITE_STEAM,
-                   'border': '0px solid',
-                   'font-size': '15px'}
-TAB_HIGHLIGHT_DICT = {'backgroundColor': TAB_HEADER_COLOR, 'color': 'white', "border-color": "transparent",
-                      'font-size': '15px'}
-PANEL_DEFAULT_DICT = {'display': 'inline-block',
-                      'background-color': TAB_COLOR, 'border': '2px solid', 'border-color': TAB_EDGE,
-                      'color': WHITE_STEAM, 'height': '720px'}
-SMALL_PANEL_DICT = {'float': 'left', 'background-color': 'transparent', 'box-sizing': 'border-box',
-                    'padding': '10px'}
-SMALL_TAB_PANEL_DICT = SMALL_PANEL_DICT | {'width': '48%', 'height': '75%',
-                                           'margin-bottom': '0px',
-                                           'padding-top': '4%', 'padding-bottom': '0%', 'padding-left': '5%',
-                                           'padding-right': '5%',
-                                           'margin-top': '0px',
-                                           'overflow': 'auto'
-                                           }
-SMALL_PANEL_HEADER_DICT = {'text-align': 'center', 'padding-top': '2%', 'padding-bottom': '2%'}
-LIST_DICT = {'display': 'inline-block', 'margin-bottom': '0px', 'padding-right': '0px'}
-NORMAL_DIVISION_DICT = SMALL_PANEL_DICT | {'width': '60%', 'height': '100%', 'margin-right': '5%', 'padding-left': '5%',
-                                           'margin-bottom': '5%', 'background-color': TAB_COLOR}
-RATING_TABS = "rating_tabs"
-RATING_TABS_OUTPUT_AREA = "table-area"
-GENRE_DROPDOWN = "genre_dropdown"
-GENRE_PREDICTION_GRAPH = "Genre_prediction_graph"
-GAMES_BY_DEV_GRAPH = "game_releases_by_dev_graph"
+# Plot defaults
+
+DEFAULT_PLOT_STYLE_DICT = dict(
+    template="plotly_dark",
+    plot_bgcolor=TAB_COLOR,
+    paper_bgcolor=TAB_COLOR,
+)
+
+DENSITY_LAYOUT_STYLE = DEFAULT_PLOT_STYLE_DICT | dict(
+    title='Distribution of Game Review Rating',
+    xaxis_title="Game user rating",
+    yaxis_title="Proportion"
+)
