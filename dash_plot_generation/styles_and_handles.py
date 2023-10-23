@@ -2,21 +2,27 @@
 RATING_MIN_REVIEWS = "min_reviews_id"
 RATING_SLIDER = "rating_slider"
 RATING_TABLE = "rating_data_table"
+
+
 DEV_CCU_LABEL = "dev_ccu"
 DEV_GAME_COUNT_LABEL = "dev_game_count"
 DEV_REV_PER_GAME_LABEL = "dev_rev_per_game"
 DEV_REVENUE_LABEL = "dev_revenue"
-DEV_TOP_GAMES = "pub_top_games"
+DEV_TOP_GAMES = "dev_top_games"
+DEVELOPER_DROPDOWN = "developer_dropdown"
+DEV_TOP_GENRES_LABEL = "dev_top_genres"
+
 PUB_TOP_GENRES_LABEL = "pub_top_genres"
 PUB_CCU_LABEL = "pub_ccu"
 PUB_GAME_COUNT_LABEL = "pub_game_count"
 PUB_REV_PER_GAME_LABEL = "pub_rev_per_game"
 PUB_REVENUE_LABEL = "pub_revenue"
 PUB_TOP_GAMES = "pub_top_games"
-DEV_TOP_GENRES_LABEL = "dev_top_genres"
-DEVELOPER_DROPDOWN = "developer_dropdown"
-RATING_DISTRIBUTION_PLOT = "game_popularity_density_plot"
+PUB_AVERAGE_RATING_LABEL = "pub_average_rating"
+GAMES_BY_PUB_GRAPH = "game_releases_by_pub_graph"
+
 DEV_AVERAGE_RATING_LABEL = "dev_average_rating"
+RATING_DISTRIBUTION_PLOT = "game_popularity_density_plot"
 RATING_TABS = "rating_tabs"
 RATING_TABS_OUTPUT_AREA = "table-area"
 GENRE_DROPDOWN = "genre_dropdown"
@@ -66,3 +72,4 @@ def create_market_scatter_plot_style(company_type):
 
 
 REVENUE_COMPANY_GAME_COUNT = "revenue_slider_company_popularity"
+PUBLISHER_DROPDOWN = "publisher_dropdown"

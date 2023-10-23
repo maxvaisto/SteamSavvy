@@ -7,7 +7,9 @@ from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_S
     DEFAULT_PLOT_STYLE_DICT, WHITE_STEAM, TAB_COLOR, TAB_EDGE, DEVELOPER_DROPDOWN, \
     DEV_TOP_GENRES_LABEL, DEV_CCU_LABEL, DEV_GAME_COUNT_LABEL, DEV_REV_PER_GAME_LABEL, \
     DEV_REVENUE_LABEL, DEV_TOP_GAMES, RATING_TABS, RATING_TABS_OUTPUT_AREA, GENRE_DROPDOWN, GENRE_PREDICTION_GRAPH, \
-    GAMES_BY_DEV_GRAPH, MARKET_PERFORMANCE_SCATTER, MP_COMPANY_TYPE_DROPDOWN, REVENUE_COMPANY_GAME_COUNT
+    GAMES_BY_DEV_GRAPH, MARKET_PERFORMANCE_SCATTER, MP_COMPANY_TYPE_DROPDOWN, REVENUE_COMPANY_GAME_COUNT, \
+    PUB_AVERAGE_RATING_LABEL, PUB_TOP_GENRES_LABEL, PUB_CCU_LABEL, PUB_GAME_COUNT_LABEL, PUB_TOP_GAMES, \
+    PUB_REV_PER_GAME_LABEL, PUB_REVENUE_LABEL, GAMES_BY_PUB_GRAPH, PUBLISHER_DROPDOWN
 
 from dash_plot_generation.data_store import FULL_DATA, OWNER_RANGE_PARTS_SORTED
 from dash_plot_generation.utils import get_cumulative_owner_game_count_limits_for_dev_and_pub
@@ -383,10 +385,91 @@ layout = html.Div(
                             className="custom-tab", selected_className="custom-tab--selected",
                             children=[
 
-                                dcc.Dropdown(id="publisher_dropdown", value="Valve",
-                                             options=[{"label": publisher, "value": publisher} for publisher in
+                                dcc.Dropdown(id=PUBLISHER_DROPDOWN, value="Valve",
+                                             options=[{"label": html.Span([publisher], style={'color': WHITE_STEAM}),
+                                                       "value": publisher} for publisher in
                                                       unique_publishers],
+                                             style={'margin-top': '20px'},
+                                             className='dash-dropdown',
                                              ),
+                                html.Div(children=[
+                                    html.Div(
+                                        children=[
+                                            html.Div(
+                                                children=[html.P("Revenue", className="small_header")],
+                                                style={'margin-bottom': '10px',
+                                                       'border-bottom': '2px solid ' + TAB_EDGE}),
+                                            html.Div(children=[
+                                                html.Div(children=[
+                                                    html.P("Game sale revenue estimates"),
+                                                    html.Div(children=[
+                                                        html.Div(children=[
+                                                            html.P(id=PUB_REVENUE_LABEL, children="$524 M",
+                                                                   className="list", style={'padding-left': '5%'})
+                                                        ]),
+                                                        html.Div(children=[
+                                                            html.P(id=PUB_REV_PER_GAME_LABEL, children="$925 M",
+                                                                   className="list", style={'padding-left': '5%'})
+                                                        ]),
+                                                    ],
+                                                        style={'margin-bottom': '20px'}),
+                                                    html.Div(children=[
+                                                        html.P("Top games by revenue:"),
+                                                        html.Small(id=PUB_TOP_GAMES, children="Half life 2"),
+                                                    ])
+                                                ]),
+                                            ])
+                                        ],
+                                        className="small_panel_tab_div",
+                                        style={'margin-right': '20px'}
+                                    ),
+                                    html.Div(children=[
+                                        html.Div(
+                                            children=[
+                                                html.Div(
+                                                    children=[html.P("General information",
+                                                                     className="small_header")],
+                                                    style={'margin-bottom': '10px',
+                                                           'border-bottom': '2px solid ' + TAB_EDGE}),
+                                                html.Div(children=[
+                                                    html.Div(children=[
+                                                        html.P(id=PUB_GAME_COUNT_LABEL, children="5",
+                                                               className="list"),
+                                                    ],
+                                                        style={'margin-bottom': '10px'}
+                                                    ),
+                                                    html.Div(children=[
+                                                        html.P(id=PUB_CCU_LABEL, children="",
+                                                               className="list"),
+                                                    ],
+                                                        style={'margin-bottom': '10px'}
+                                                    ),
+                                                    html.Div(children=[
+                                                        html.P("Popular game genres:"),
+                                                        html.Small(id=PUB_TOP_GENRES_LABEL,
+                                                                   children="FPS, Action, Puzzle"),
+                                                    ],
+                                                        style={'margin-bottom': '10px'}
+                                                    ),
+                                                    html.Div(children=[
+                                                        html.P(id=PUB_AVERAGE_RATING_LABEL,
+                                                               children="",
+                                                               className="list")
+                                                    ])
+                                                ])
+                                            ])
+
+                                    ], className="small_panel_tab_div",
+                                        style={'margin-left': '20px'}
+                                    )
+                                ], style={'height': '300px', 'overflow': 'auto', 'margin-bottom': '20px'},
+                                ),
+                                html.Div(
+                                    children=[dcc.Graph(id=GAMES_BY_PUB_GRAPH,
+                                                        style=DEFAULT_PLOT_STYLE_DICT | {'height': '250px',
+                                                                                         'width': '100%'})
+                                              ]
+                                )
                             ])
 
                 ]),

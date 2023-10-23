@@ -10,7 +10,9 @@ from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_S
     TAB_HEADER_COLOR, DEVELOPER_DROPDOWN, DEV_TOP_GENRES_LABEL, DEV_CCU_LABEL, DEV_GAME_COUNT_LABEL, \
     DEV_REV_PER_GAME_LABEL, DEV_REVENUE_LABEL, DEV_TOP_GAMES, RATING_TABS, RATING_TABS_OUTPUT_AREA, \
     GENRE_PREDICTION_GRAPH, GENRE_DROPDOWN, DEFAULT_PLOT_STYLE_DICT, GAMES_BY_DEV_GRAPH, MARKET_PERFORMANCE_SCATTER, \
-    MP_COMPANY_TYPE_DROPDOWN, create_market_scatter_plot_style, REVENUE_COMPANY_GAME_COUNT
+    MP_COMPANY_TYPE_DROPDOWN, create_market_scatter_plot_style, REVENUE_COMPANY_GAME_COUNT, PUB_REVENUE_LABEL, \
+    PUB_TOP_GENRES_LABEL, PUB_CCU_LABEL, PUB_GAME_COUNT_LABEL, PUB_REV_PER_GAME_LABEL, PUB_TOP_GAMES, \
+    PUB_AVERAGE_RATING_LABEL, PUBLISHER_DROPDOWN, GAMES_BY_PUB_GRAPH
 from dash_plot_generation.utils import get_average_user_rating_label, get_game_count_label, get_top_revenue_game_labels, \
     get_total_revenue_label, get_top_genre_labels, get_ccu_label, get_average_game_rev_label
 from visual_presentation.Annual_release_games import get_game_release_figure
@@ -41,6 +43,30 @@ APP.layout = html.Div([
 ], className="body")
 
 
+def update_company_info(filtered_dataframe: pandas.DataFrame):
+    # Top games
+    company_top_games_label = get_top_revenue_game_labels(filtered_dataframe)
+
+    # Dev total revenue
+    company_revenue = get_total_revenue_label(filtered_dataframe)
+
+    # Dev revenue per game
+    company_game_revenue_per_game = get_average_game_rev_label(filtered_dataframe)
+
+    # Top genres
+    company_top_genre_labels = get_top_genre_labels(filtered_dataframe)
+
+    # CCU
+    company_ccu = get_ccu_label(filtered_dataframe)
+
+    # Game count
+    company_game_count = get_game_count_label(filtered_dataframe)
+
+    user_rating_value = get_average_user_rating_label(filtered_dataframe)
+    return company_revenue, company_top_genre_labels, company_ccu, company_game_count, company_game_revenue_per_game, \
+        company_top_games_label, user_rating_value
+
+
 @APP.callback([Output(DEV_REVENUE_LABEL, "children"),
                Output(DEV_TOP_GENRES_LABEL, "children"),
                Output(DEV_CCU_LABEL, "children"),
@@ -57,27 +83,36 @@ def update_dev_info(dev_name):
     mask = FULL_DATA.developer.apply(lambda x: dev_name in x if isinstance(x, str) else False)
     dev_data = FULL_DATA[mask]
 
-    # Top games
-    dev_top_games_label = get_top_revenue_game_labels(dev_data)
+    return update_company_info(dev_data)
 
-    # Dev total revenue
-    dev_revenue = get_total_revenue_label(dev_data)
 
-    # Dev revenue per game
-    dev_game_revenue_per_game = get_average_game_rev_label(dev_data)
+@APP.callback([Output(PUB_REVENUE_LABEL, "children"),
+               Output(PUB_TOP_GENRES_LABEL, "children"),
+               Output(PUB_CCU_LABEL, "children"),
+               Output(PUB_GAME_COUNT_LABEL, "children"),
+               Output(PUB_REV_PER_GAME_LABEL, "children"),
+               Output(PUB_TOP_GAMES, "children"),
+               Output(PUB_AVERAGE_RATING_LABEL, "children")],
+              inputs=[Input(PUBLISHER_DROPDOWN, "value")])
+def update_pub_info(pub_name):
+    if not (pub_name and isinstance(FULL_DATA, pandas.DataFrame)):
+        raise PreventUpdate
+    # Remove empty rows
+    mask = FULL_DATA.publisher.apply(lambda x: pub_name in x if isinstance(x, str) else False)
+    pub_data = FULL_DATA[mask]
 
-    # Top genres
-    dev_top_genre_labels = get_top_genre_labels(dev_data)
+    return update_company_info(pub_data)
 
-    # CCU
-    dev_ccu = get_ccu_label(dev_data)
 
-    # Game count
-    dev_game_count = get_game_count_label(dev_data)
+@APP.callback(Output(GAMES_BY_PUB_GRAPH, "figure"),
+              Input(PUBLISHER_DROPDOWN, "value"))
+def get_games_by_pub_table(pub_name):
+    if not (pub_name and isinstance(FULL_DATA, pandas.DataFrame)):
+        raise PreventUpdate
 
-    user_rating_value = get_average_user_rating_label(dev_data)
-    return dev_revenue, dev_top_genre_labels, dev_ccu, dev_game_count, dev_game_revenue_per_game, dev_top_games_label, \
-        user_rating_value
+    layout_arguments = DEFAULT_PLOT_STYLE_DICT | dict(margin=dict(l=20, r=20, t=50, b=20))
+
+    return get_game_release_figure(FULL_DATA, pub_name, "publisher", **layout_arguments)
 
 
 @APP.callback(Output(GAMES_BY_DEV_GRAPH, "figure"),
