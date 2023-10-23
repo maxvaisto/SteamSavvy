@@ -42,6 +42,7 @@ DEFAULT_PLOT_STYLE_DICT = dict(
     template="plotly_dark",
     plot_bgcolor=TAB_COLOR,
     paper_bgcolor=TAB_COLOR,
+    margin=dict(l=20, r=20, t=50, b=20)
 )
 
 DENSITY_LAYOUT_STYLE = DEFAULT_PLOT_STYLE_DICT | dict(
@@ -60,4 +61,8 @@ def create_market_scatter_plot_style(company_type):
         'title': f'Market Performance for {company_type} companies',
         "xaxis_title": "Revenue",
         "yaxis_title": "Number of Game Owners",
+
     }
+
+
+REVENUE_COMPANY_GAME_COUNT = "revenue_slider_company_popularity"

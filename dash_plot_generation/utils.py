@@ -203,15 +203,26 @@ def get_average_game_rev_label(data):
     dev_game_revenue_per_game = " ".join(["•", dev_game_revenue_per_game_row])
     return dev_game_revenue_per_game
 
+
 def get_all_genres(df):
     unique_genres = set()
     try:
         for index, row in df.iterrows():
-                if not isinstance(row.genres, str):
-                    continue
-                fully_split = row.genres.split(", ")
-                unique_genres.update(fully_split)
+            if not isinstance(row.genres, str):
+                continue
+            fully_split = row.genres.split(", ")
+            unique_genres.update(fully_split)
     except Exception as ex:
         pass
     return unique_genres
 
+
+def get_cumulative_owner_game_count_limits_for_dev_and_pub(df):
+    owner_cum_sums_dev = df[["developer"]].value_counts()
+    min_owner_dev = 1
+    max_owner_dev = owner_cum_sums_dev.iloc[0]
+    owner_cum_sums_pub = df[["publisher"]].value_counts()
+    min_owner_pub = 1
+    max_owner_pub = owner_cum_sums_pub.iloc[0]
+    return {"developer": {"min": min_owner_dev, "max": max_owner_dev},
+            "publisher": {"min": min_owner_pub, "max": max_owner_pub}}

@@ -10,7 +10,7 @@ from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_S
     TAB_HEADER_COLOR, DEVELOPER_DROPDOWN, DEV_TOP_GENRES_LABEL, DEV_CCU_LABEL, DEV_GAME_COUNT_LABEL, \
     DEV_REV_PER_GAME_LABEL, DEV_REVENUE_LABEL, DEV_TOP_GAMES, RATING_TABS, RATING_TABS_OUTPUT_AREA, \
     GENRE_PREDICTION_GRAPH, GENRE_DROPDOWN, DEFAULT_PLOT_STYLE_DICT, GAMES_BY_DEV_GRAPH, MARKET_PERFORMANCE_SCATTER, \
-    MP_COMPANY_TYPE_DROPDOWN, create_market_scatter_plot_style
+    MP_COMPANY_TYPE_DROPDOWN, create_market_scatter_plot_style, REVENUE_COMPANY_GAME_COUNT
 from dash_plot_generation.utils import get_average_user_rating_label, get_game_count_label, get_top_revenue_game_labels, \
     get_total_revenue_label, get_top_genre_labels, get_ccu_label, get_average_game_rev_label
 from visual_presentation.Annual_release_games import get_game_release_figure
@@ -143,10 +143,12 @@ def get_genre_prediction_table(genre, **kwargs):
 
 
 @APP.callback(Output(MARKET_PERFORMANCE_SCATTER, "figure"),
-             Input(MP_COMPANY_TYPE_DROPDOWN, "value"))
-def get_market_performance_scatter(company_type):
+              Input(MP_COMPANY_TYPE_DROPDOWN, "value"),
+              Input(REVENUE_COMPANY_GAME_COUNT, "value"))
+def get_market_performance_scatter(company_type, company_game_onwer_range):
     style = create_market_scatter_plot_style(company_type)
-    return plot_market_performance(FULL_DATA, company_type, 100, 0, **style)
+    return plot_market_performance(df=FULL_DATA, company_type=company_type, game_number_min=company_game_onwer_range[0],
+                                   game_number_max=company_game_onwer_range[1], **style)
 
 
 if __name__ == "__main__":

@@ -7,9 +7,10 @@ from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_S
     DEFAULT_PLOT_STYLE_DICT, WHITE_STEAM, TAB_COLOR, TAB_EDGE, DEVELOPER_DROPDOWN, \
     DEV_TOP_GENRES_LABEL, DEV_CCU_LABEL, DEV_GAME_COUNT_LABEL, DEV_REV_PER_GAME_LABEL, \
     DEV_REVENUE_LABEL, DEV_TOP_GAMES, RATING_TABS, RATING_TABS_OUTPUT_AREA, GENRE_DROPDOWN, GENRE_PREDICTION_GRAPH, \
-    GAMES_BY_DEV_GRAPH, MARKET_PERFORMANCE_SCATTER, MP_COMPANY_TYPE_DROPDOWN
+    GAMES_BY_DEV_GRAPH, MARKET_PERFORMANCE_SCATTER, MP_COMPANY_TYPE_DROPDOWN, REVENUE_COMPANY_GAME_COUNT
 
 from dash_plot_generation.data_store import FULL_DATA, OWNER_RANGE_PARTS_SORTED
+from dash_plot_generation.utils import get_cumulative_owner_game_count_limits_for_dev_and_pub
 
 global APP, FULL_DATA
 
@@ -34,7 +35,10 @@ max_reviews = numpy.nanmax(FULL_DATA.apply(lambda x: x["positive"] + x["negative
 owner_range_dict = {index: val_str for (index, (val, val_str)) in enumerate(OWNER_RANGE_PARTS_SORTED)}
 min_owner = min(owner_range_dict.keys())
 max_owner = max(owner_range_dict.keys())
-
+cumulative_owner_ranges = get_cumulative_owner_game_count_limits_for_dev_and_pub(FULL_DATA)
+cum_range_limits = {
+    "min": min(cumulative_owner_ranges["developer"]["min"], cumulative_owner_ranges["publisher"]["max"]),
+    "max": max(cumulative_owner_ranges["developer"]["max"], cumulative_owner_ranges["publisher"]["max"])}
 layout = html.Div(
     children=[
         html.Div(className="row", children=[
@@ -237,16 +241,29 @@ layout = html.Div(
                                                                                                     t=50,
                                                                                                     b=20)))
                                                                          )],
-                                                     style={"width": "60%", "vertical-align": "top",
-                                                            "display": "inline-block", "margin-right":"5%"}),
-                                            html.Div(children=[html.H5("First plot text"),
+                                                     style={"width": "80%", "vertical-align": "top",
+                                                            "display": "inline-block", "margin-right": "5%"}),
+                                            html.Div(children=[html.H5("Filters"),
                                                                dcc.Dropdown(id=MP_COMPANY_TYPE_DROPDOWN,
                                                                             className='dash-dropdown',
                                                                             value="developer",
-                                                                            options=["developer", "publisher"])],
-                                                     style={"width": "30%", "vertical-align": "top",
+                                                                            options=["developer", "publisher"]),
+                                                               dcc.RangeSlider(id=REVENUE_COMPANY_GAME_COUNT,
+                                                                               min=cum_range_limits["min"],
+                                                                               max=cum_range_limits["max"],
+                                                                               step=cum_range_limits["min"],
+                                                                               value=[cum_range_limits["min"],
+                                                                                      cum_range_limits["max"]],
+                                                                               marks=None,
+                                                                               tooltip={"placement": "right",
+                                                                                        "always_visible": True},
+                                                                               vertical=True,
+                                                                               verticalHeight=200),
+                                                               ],
+                                                     style={"width": "15%", "vertical-align": "top",
                                                             "display": "inline-block"})
-                                        ], style={"display": "flex", "align-items": "flex-start", "margin-bottom":"50px"}
+                                        ], style={"display": "flex", "align-items": "flex-start",
+                                                  "margin-bottom": "50px"}
                                         ),
                                         html.Div(id="Market performance_second",
                                                  children=[
