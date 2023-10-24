@@ -21,7 +21,14 @@ from visual_presentation.Annual_release_games import get_game_release_figure
 from visual_presentation.Distribution_of_review_rating import get_rating_density_plot
 from visual_presentation.Market_performance_function import plot_market_performance
 
-global APP
+APP = dash.Dash(
+    name=__name__,
+    use_pages=True,
+    external_stylesheets=['/assets/styles.css',
+                          'https://codepen.io/chriddyp/pen/bWLwgP.css']
+)
+
+server = APP.server
 APP.layout = html.Div([
     html.Nav(className="navbar", children=[
         html.A("SteamSavvy - Steam game data insights", href="/",
