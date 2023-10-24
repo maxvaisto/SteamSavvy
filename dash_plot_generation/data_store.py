@@ -56,6 +56,3 @@ def add_game_revenues_and_owner_means(data):
     data["game_revenue"] = data.apply(lambda x: x["owner_means"] * x["price"] if
     not (pandas.isna(x["owner_means"]) or pandas.isna(x["price"]))
     else 0, axis=1)
-
-
-FULL_DATA, OWNER_RANGE_PARTS_SORTED, LABEL_ENCODED_DATASET = initialize_data()

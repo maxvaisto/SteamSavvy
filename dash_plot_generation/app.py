@@ -4,8 +4,9 @@ import pandas
 from dash import html, dash, Output, Input, dcc
 from dash.exceptions import PreventUpdate
 
-from Project_data_processor_ML import get_genre_plot
 import dash_plot_generation.data_store as ds
+ds.initialize_data()
+from Project_data_processor_ML import get_genre_plot
 from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_SLIDER, RATING_TABLE, \
     DEV_AVERAGE_RATING_LABEL, DENSITY_LAYOUT_STYLE, WHITE_STEAM, TAB_COLOR, TAB_EDGE, \
     TAB_HEADER_COLOR, DEVELOPER_DROPDOWN, DEV_TOP_GENRES_LABEL, DEV_CCU_LABEL, DEV_GAME_COUNT_LABEL, \
@@ -237,5 +238,4 @@ def start_server():
 
 if __name__ == "__main__":
     print("Here!")
-    ds.initialize_data()
     start_server()
