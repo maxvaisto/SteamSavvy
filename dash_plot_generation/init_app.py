@@ -1,3 +1,5 @@
+from dash import dash
+
 import dash_plot_generation.data_store as ds
 
 ds.initialize_data()
