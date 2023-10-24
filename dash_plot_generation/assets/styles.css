@@ -278,3 +278,12 @@ p.list {
     margin-bottom: 0;
     padding-right: 0;
 }
+
+div.top-border-thin {
+    border-top: 1px solid var(--TAB_EDGE);
+    padding-top: 20px;
+}
+
+div.padding-large {
+
+}

@@ -235,5 +235,6 @@ def start_server():
 
 
 if __name__ == "__main__":
+    print("Here!")
     ds.initialize_data()
     start_server()

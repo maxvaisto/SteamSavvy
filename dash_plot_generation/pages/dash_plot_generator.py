@@ -251,7 +251,13 @@ layout = html.Div(
                                                                dcc.Dropdown(id=MP_COMPANY_TYPE_DROPDOWN,
                                                                             className='dash-dropdown',
                                                                             value="developer",
-                                                                            options=["developer", "publisher"]),
+                                                                            options=[
+                                                                                {"label": html.Span(
+                                                                                    [company_type],
+                                                                                    style={'color': WHITE_STEAM}),
+                                                                                    "value": company_type} for
+                                                                                company_type
+                                                                                in ["developer", "publisher"]]),
                                                                dcc.RangeSlider(id=REVENUE_COMPANY_GAME_COUNT,
                                                                                min=cum_range_limits["min"],
                                                                                max=cum_range_limits["max"],
@@ -267,11 +273,13 @@ layout = html.Div(
                                                      style={"width": "15%", "vertical-align": "top",
                                                             "display": "inline-block"})
                                         ], style={"display": "flex", "align-items": "flex-start",
-                                                  "margin-bottom": "50px"}
+                                                  "margin-bottom": "50px",
+                                                  "height":"500px"}
                                         ),
                                         html.Div(id="Market performance_second",
                                                  children=[
-                                                     html.H5("Top companies"),
+                                                     html.H4("Top companies by revenue",
+                                                             style={"margin-bottom": "20px"}),
                                                      dcc.Tabs(
                                                          id=TOP_REVENUE_COMPANIES,
                                                          value="developer",
@@ -285,14 +293,18 @@ layout = html.Div(
                                                                      value="publisher",
                                                                      className="custom-tab sub",
                                                                      selected_className="custom-tab-sub--selected")
-                                                         ]
+                                                         ],
                                                      ),
+                                                     html.Div(children=[],
+                                                              style={"width": "70%"},
+                                                              className="top-border-thin"
+                                                              ),
                                                      html.Div(className="scrollable div-with_scroll",
                                                               children=[html.Div(id=TOP_COMPANY_TABLE_AREA)])
-                                                 ]
-                                        )
+                                                 ],
+                                                 )
                                     ],
-                                    className="custom-div-main-panel scrollable"
+                                    className="custom-div-main-panel scrollable",
                                 )
 
                             ],
