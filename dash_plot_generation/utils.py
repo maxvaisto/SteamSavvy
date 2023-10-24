@@ -1,7 +1,13 @@
 import math
 import re
+from collections import Counter
 from typing import Sequence, Optional, Any
+
+import numpy
 import pandas
+from dash import html
+
+from dash_plot_generation.styles_and_handles import SPACE_NORMAL_ENTRY
 
 DEFAULT_ILLEGAL_CONTINUATIONS = {"INC.", "LLC", "CO.", "LTD.", "S.R.O."}
 
@@ -90,7 +96,6 @@ def replace_owner_number_with_symbol_real_numeric(value):
     value_str = str(value)
     value_str = re.sub("0" * 9 + "$", " billion", value_str)
     value_str = re.sub("0" * 6 + "$", " million", value_str)
-    # value_str = re.sub("0" * 3 + "$", " thousand", value_str)
     return value_str
 
 
@@ -120,3 +125,120 @@ def round_to_three_largest_digits(number, accuracy=2):
     round_val = -(len(str(round(number))) - accuracy)
     return_val = round(round(number), min(round_val, 0))
     return return_val
+
+
+def get_average_user_rating_label(dev_data, space_amount: int = SPACE_NORMAL_ENTRY):
+    value_str = str(round(100 * dev_data["Review_rating"].mean())) + "%"
+    label = label_with_text("Average game rating", value_str, space_amount, ".")
+    return label
+
+
+def get_game_count_label(dev_data, space_amount: int = SPACE_NORMAL_ENTRY):
+    return label_with_text("Number of games", str(dev_data.shape[0]), space_amount, ".")
+
+
+def get_top_revenue_game_labels(data):
+    top_games = data.sort_values(by=["game_revenue"], ascending=False).head(3)
+    top_games_processed = top_games.apply(lambda x: label_with_rev(x["name"], x["game_revenue"], SPACE_NORMAL_ENTRY,
+                                                                   ".", "$"), axis=1)
+    dev_top_games_with_dot = [" ".join(["•", game]) for game in top_games_processed]
+    dev_top_games_label = html.Div("\n".join(dev_top_games_with_dot),
+                                   style={'white-space': 'pre-line', 'padding-left': '5%'})
+    return dev_top_games_label
+
+
+def get_top_revenue_game_names(data):
+    top_games = data.sort_values(by=["game_revenue"], ascending=False).head(3)
+    top_games_processed = top_games.apply(lambda x: label_with_rev(x["name"], x["game_revenue"], SPACE_NORMAL_ENTRY,
+                                                                   ".", "$"), axis=1)
+    dev_top_games_with_dot = [" ".join(["•", game]) for game in top_games_processed]
+    dev_top_games_label = "\n".join(dev_top_games_with_dot)
+    return dev_top_games_label
+
+
+def get_total_revenue_label(data, space_amount: int = SPACE_NORMAL_ENTRY, add_point: bool = True):
+    starting_text = "• Total" if add_point else "Total"
+    top_games_processed = label_with_rev(starting_text, numpy.nansum(data["game_revenue"]),
+                                         space_amount, ".", "$")
+    return top_games_processed
+
+
+def get_top_genre_labels(data):
+    genre_totals = [genre for genre_list in data["genres"] if isinstance(genre_list, str)
+                    for genre in genre_list.split(", ")]
+    genre_counts = Counter(genre_totals).most_common(3)
+    top_genres_rows = [label_with_text(genre[0], str(genre[1]), 50, ".") for genre in genre_counts]
+    top_genres_with_dot = [" ".join(["•", row]) for row in top_genres_rows]
+    top_genre_labels = html.Div("\n".join(top_genres_with_dot),
+                                style={'white-space': 'pre-line', 'padding-left': '5%'})
+    return top_genre_labels
+
+
+def get_ccu_label(data, space_amount: int = SPACE_NORMAL_ENTRY):
+    dev_ccu = get_ccu_str(data)
+    return label_with_text("Concurrent users", dev_ccu, space_amount, ".")
+
+
+def get_ccu_str(data):
+    ccu = sum(data["ccu"])
+    return convert_to_numeric_str(ccu)
+
+
+def get_genre_popularity_counts(df, group_after_largest=8):
+    genre_df = df[["genres", "owner_means", "game_revenue"]]
+    genre_owners = {}
+    genre_revenue = {}
+
+    for index, row in genre_df.iterrows():
+        if not isinstance(row.genres, str):
+            continue
+        genre_list = row.genres.split(", ")
+        for genre in genre_list:
+            if genre in genre_owners.keys():
+                genre_owners[genre] += row["owner_means"]
+                genre_revenue[genre] += row["game_revenue"]
+            else:
+                genre_owners[genre] = row["owner_means"]
+                genre_revenue[genre] = row["game_revenue"]
+    top_owners = dict(Counter(genre_owners).most_common(group_after_largest))
+    top_revenue = dict(Counter(genre_revenue).most_common(group_after_largest))
+    top_owners["Other"] = sum([val for (key, val) in genre_owners.items()
+                               if key not in top_owners.keys()])
+    top_revenue["Other"] = sum([val for (key, val) in genre_revenue.items()
+                                if key not in top_revenue.keys()])
+
+    return top_owners, top_revenue
+
+
+def get_average_game_rev_label(data, space_amount: int = SPACE_NORMAL_ENTRY, add_point: bool = True):
+    game_revenue_per_game_raw = numpy.nansum(data["game_revenue"]) / len(data["game_revenue"])
+    dev_game_revenue_per_game_row = label_with_rev("Average", game_revenue_per_game_raw,
+                                                   space_amount, ".", "$")
+
+    dev_game_revenue_per_game = " ".join(["•", dev_game_revenue_per_game_row]) if add_point \
+        else dev_game_revenue_per_game_row
+    return dev_game_revenue_per_game
+
+
+def get_all_genres(df):
+    unique_genres = set()
+    try:
+        for index, row in df.iterrows():
+            if not isinstance(row.genres, str):
+                continue
+            fully_split = row.genres.split(", ")
+            unique_genres.update(fully_split)
+    except Exception as ex:
+        pass
+    return unique_genres
+
+
+def get_cumulative_owner_game_count_limits_for_dev_and_pub(df):
+    owner_cum_sums_dev = df[["developer"]].value_counts()
+    min_owner_dev = 1
+    max_owner_dev = owner_cum_sums_dev.iloc[0]
+    owner_cum_sums_pub = df[["publisher"]].value_counts()
+    min_owner_pub = 1
+    max_owner_pub = owner_cum_sums_pub.iloc[0]
+    return {"developer": {"min": min_owner_dev, "max": max_owner_dev},
+            "publisher": {"min": min_owner_pub, "max": max_owner_pub}}
