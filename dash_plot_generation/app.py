@@ -28,6 +28,7 @@ APP = dash.Dash(
                           'https://codepen.io/chriddyp/pen/bWLwgP.css']
 )
 
+server = APP.server
 APP.layout = html.Div([
     html.Nav(className="navbar", children=[
         html.A("SteamSavvy - Steam game data insights", href="/",
