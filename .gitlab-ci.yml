@@ -48,10 +48,13 @@ deploy-job:      # This job runs in the deploy stage.
     - echo "Deploying application..."
     - echo "Application successfully deployed."
 
-# 3c5fdfc6-a7f9-468e-99a9-233e5713f76d
+variables:
+    HEROKU_PRODUCTION_KEY: "3c5fdfc6-a7f9-468e-99a9-233e5713f76d"
+    HEROKU_APP_NAME: "steam-savvy"
+
 heroku_deploy:
   stage: production
   script:
     - gem install dpl
-    - dpl --provider=heroku --app=steam-savvy --api-key=3c5fdfc6-a7f9-468e-99a9-233e5713f76d
+    - dpl --provider=heroku --app=$HEROKU_APP_NAME --api-key=$HEROKU_PRODUCTION_KEY
 
