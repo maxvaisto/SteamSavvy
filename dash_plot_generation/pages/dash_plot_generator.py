@@ -2,6 +2,7 @@ import numpy
 import dash
 from dash import html, dcc
 from plotly import graph_objects as go
+import dash_plot_generation.data_store as ds
 from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_SLIDER, \
     DEV_AVERAGE_RATING_LABEL, \
     DEFAULT_PLOT_STYLE_DICT, WHITE_STEAM, TAB_COLOR, TAB_EDGE, DEVELOPER_DROPDOWN, \
@@ -9,12 +10,12 @@ from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_S
     DEV_REVENUE_LABEL, DEV_TOP_GAMES, RATING_TABS, RATING_TABS_OUTPUT_AREA, GENRE_DROPDOWN, GENRE_PREDICTION_GRAPH, \
     GAMES_BY_DEV_GRAPH, MARKET_PERFORMANCE_SCATTER, MP_COMPANY_TYPE_DROPDOWN, REVENUE_COMPANY_GAME_COUNT, \
     PUB_AVERAGE_RATING_LABEL, PUB_TOP_GENRES_LABEL, PUB_CCU_LABEL, PUB_GAME_COUNT_LABEL, PUB_TOP_GAMES, \
-    PUB_REV_PER_GAME_LABEL, PUB_REVENUE_LABEL, GAMES_BY_PUB_GRAPH, PUBLISHER_DROPDOWN
+    PUB_REV_PER_GAME_LABEL, PUB_REVENUE_LABEL, GAMES_BY_PUB_GRAPH, PUBLISHER_DROPDOWN, TOP_REVENUE_COMPANIES, \
+    TOP_COMPANY_TABLE_AREA
 
-from dash_plot_generation.data_store import FULL_DATA, OWNER_RANGE_PARTS_SORTED
 from dash_plot_generation.utils import get_cumulative_owner_game_count_limits_for_dev_and_pub
 
-global APP, FULL_DATA
+global APP
 
 # unique_publishers = extract_unique_companies(FULL_DATA["publisher"].apply(lambda x: split_companies(x)))
 # unique_developers = extract_unique_companies(FULL_DATA["developer"].apply(lambda x: split_companies(x)))
@@ -33,14 +34,15 @@ genre_revenue = {key: val for (key, val) in
 # unique_genres = get_all_genres(FULL_DATA)
 unique_genres = ["Action", "Adventure"]
 # Game popularity filter values
-max_reviews = numpy.nanmax(FULL_DATA.apply(lambda x: x["positive"] + x["negative"], axis=1))
-owner_range_dict = {index: val_str for (index, (val, val_str)) in enumerate(OWNER_RANGE_PARTS_SORTED)}
+max_reviews = numpy.nanmax(ds.FULL_DATA.apply(lambda x: x["positive"] + x["negative"], axis=1))
+owner_range_dict = {index: val_str for (index, (val, val_str)) in enumerate(ds.OWNER_RANGE_PARTS_SORTED)}
 min_owner = min(owner_range_dict.keys())
 max_owner = max(owner_range_dict.keys())
-cumulative_owner_ranges = get_cumulative_owner_game_count_limits_for_dev_and_pub(FULL_DATA)
+cumulative_owner_ranges = get_cumulative_owner_game_count_limits_for_dev_and_pub(ds.FULL_DATA)
 cum_range_limits = {
     "min": min(cumulative_owner_ranges["developer"]["min"], cumulative_owner_ranges["publisher"]["max"]),
     "max": max(cumulative_owner_ranges["developer"]["max"], cumulative_owner_ranges["publisher"]["max"])}
+
 layout = html.Div(
     children=[
         html.Div(className="row", children=[
@@ -269,12 +271,26 @@ layout = html.Div(
                                         ),
                                         html.Div(id="Market performance_second",
                                                  children=[
-                                                     html.Div(children=[dcc.Graph()],
-                                                              style={"width": "60%", "display": "inline-block"}),
-                                                     html.Div(children=[html.H5("Second plot text")],
-                                                              style={"width": "30%", "display": "inline-block"})
+                                                     html.H5("Top companies"),
+                                                     dcc.Tabs(
+                                                         id=TOP_REVENUE_COMPANIES,
+                                                         value="developer",
+                                                         className="panel-2",
+                                                         children=[
+                                                             dcc.Tab(value="developer",
+                                                                     label="Developers",
+                                                                     className="custom-tab-sub",
+                                                                     selected_className="custom-tab-sub--selected"),
+                                                             dcc.Tab(label="Publishers",
+                                                                     value="publisher",
+                                                                     className="custom-tab sub",
+                                                                     selected_className="custom-tab-sub--selected")
+                                                         ]
+                                                     ),
+                                                     html.Div(className="scrollable div-with_scroll",
+                                                              children=[html.Div(id=TOP_COMPANY_TABLE_AREA)])
                                                  ]
-                                                 )
+                                        )
                                     ],
                                     className="custom-div-main-panel scrollable"
                                 )
@@ -482,7 +498,6 @@ layout = html.Div(
     style={"font-family": "Tahoma"},
     className="body"
 )
-
 dash.register_page(
     __name__,
     title="Dashboard",

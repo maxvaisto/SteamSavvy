@@ -96,7 +96,6 @@ def replace_owner_number_with_symbol_real_numeric(value):
     value_str = str(value)
     value_str = re.sub("0" * 9 + "$", " billion", value_str)
     value_str = re.sub("0" * 6 + "$", " million", value_str)
-    # value_str = re.sub("0" * 3 + "$", " thousand", value_str)
     return value_str
 
 
@@ -128,14 +127,14 @@ def round_to_three_largest_digits(number, accuracy=2):
     return return_val
 
 
-def get_average_user_rating_label(dev_data):
+def get_average_user_rating_label(dev_data, space_amount: int = SPACE_NORMAL_ENTRY):
     value_str = str(round(100 * dev_data["Review_rating"].mean())) + "%"
-    label = label_with_text("Average game rating", value_str, SPACE_NORMAL_ENTRY, ".")
+    label = label_with_text("Average game rating", value_str, space_amount, ".")
     return label
 
 
-def get_game_count_label(dev_data):
-    return label_with_text("Number of games", str(dev_data.shape[0]), SPACE_NORMAL_ENTRY, ".")
+def get_game_count_label(dev_data, space_amount: int = SPACE_NORMAL_ENTRY):
+    return label_with_text("Number of games", str(dev_data.shape[0]), space_amount, ".")
 
 
 def get_top_revenue_game_labels(data):
@@ -148,8 +147,19 @@ def get_top_revenue_game_labels(data):
     return dev_top_games_label
 
 
-def get_total_revenue_label(data):
-    top_games_processed = label_with_rev("• Total", numpy.nansum(data["game_revenue"]), SPACE_NORMAL_ENTRY, ".", "$")
+def get_top_revenue_game_names(data):
+    top_games = data.sort_values(by=["game_revenue"], ascending=False).head(3)
+    top_games_processed = top_games.apply(lambda x: label_with_rev(x["name"], x["game_revenue"], SPACE_NORMAL_ENTRY,
+                                                                   ".", "$"), axis=1)
+    dev_top_games_with_dot = [" ".join(["•", game]) for game in top_games_processed]
+    dev_top_games_label = "\n".join(dev_top_games_with_dot)
+    return dev_top_games_label
+
+
+def get_total_revenue_label(data, space_amount: int = SPACE_NORMAL_ENTRY, add_point: bool = True):
+    starting_text = "• Total" if add_point else "Total"
+    top_games_processed = label_with_rev(starting_text, numpy.nansum(data["game_revenue"]),
+                                         space_amount, ".", "$")
     return top_games_processed
 
 
@@ -164,11 +174,14 @@ def get_top_genre_labels(data):
     return top_genre_labels
 
 
-def get_ccu_label(data):
-    ccu = sum(data["ccu"])
-    dev_ccu = convert_to_numeric_str(ccu)
+def get_ccu_label(data, space_amount: int = SPACE_NORMAL_ENTRY):
+    dev_ccu = get_ccu_str(data)
+    return label_with_text("Concurrent users", dev_ccu, space_amount, ".")
 
-    return label_with_text("Concurrent users", dev_ccu, SPACE_NORMAL_ENTRY, ".")
+
+def get_ccu_str(data):
+    ccu = sum(data["ccu"])
+    return convert_to_numeric_str(ccu)
 
 
 def get_genre_popularity_counts(df, group_after_largest=8):
@@ -197,10 +210,13 @@ def get_genre_popularity_counts(df, group_after_largest=8):
     return top_owners, top_revenue
 
 
-def get_average_game_rev_label(data):
+def get_average_game_rev_label(data, space_amount: int = SPACE_NORMAL_ENTRY, add_point: bool = True):
     game_revenue_per_game_raw = numpy.nansum(data["game_revenue"]) / len(data["game_revenue"])
-    dev_game_revenue_per_game_row = label_with_rev("Average", game_revenue_per_game_raw, SPACE_NORMAL_ENTRY, ".", "$")
-    dev_game_revenue_per_game = " ".join(["•", dev_game_revenue_per_game_row])
+    dev_game_revenue_per_game_row = label_with_rev("Average", game_revenue_per_game_raw,
+                                                   space_amount, ".", "$")
+
+    dev_game_revenue_per_game = " ".join(["•", dev_game_revenue_per_game_row]) if add_point \
+        else dev_game_revenue_per_game_row
     return dev_game_revenue_per_game
 
 

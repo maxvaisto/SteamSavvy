@@ -8,10 +8,12 @@ from dash_plot_generation.utils import convert_owners_to_limits, get_owner_means
 csv_path = os.path.normpath(os.getcwd() + os.sep + os.pardir + os.sep + "api_exploration")
 split_csv_path = os.path.join(csv_path, "file_segments")
 
+FULL_DATA, OWNER_RANGE_PARTS_SORTED, LABEL_ENCODED_DATASET = None, None, None
+
 
 def initialize_data():
-
-
+    print("Initializing data")
+    global FULL_DATA, OWNER_RANGE_PARTS_SORTED, LABEL_ENCODED_DATASET
     dataframe = setup_main_dataframe()
     # Create a label encoded dataframe
 
@@ -27,8 +29,9 @@ def initialize_data():
                            in ranges_test for i in range(2)}
     sorted_owner_list = sorted(unique_owner_values, key=lambda range: range[0])
 
-    # Return values
-    return dataframe, sorted_owner_list, genre_data
+    # Set global variables
+    FULL_DATA, OWNER_RANGE_PARTS_SORTED, LABEL_ENCODED_DATASET = dataframe, sorted_owner_list, genre_data
+
 
 def setup_main_dataframe():
     dataframe = None
@@ -39,7 +42,7 @@ def setup_main_dataframe():
     return dataframe
 
 
-def setup_label_encoded_data(data:pandas.DataFrame):
+def setup_label_encoded_data(data: pandas.DataFrame):
     data_copy = data.copy()
     full_data_df = clean_index(data_copy)
     label_encoding(full_data_df)
@@ -48,12 +51,8 @@ def setup_label_encoded_data(data:pandas.DataFrame):
     return owners_genre_data, number_genre_data
 
 
-
 def add_game_revenues_and_owner_means(data):
     data["owner_means"] = data["owners"].apply(lambda x: get_owner_means(convert_owners_to_limits(x)))
     data["game_revenue"] = data.apply(lambda x: x["owner_means"] * x["price"] if
     not (pandas.isna(x["owner_means"]) or pandas.isna(x["price"]))
     else 0, axis=1)
-
-
-FULL_DATA, OWNER_RANGE_PARTS_SORTED, LABEL_ENCODED_DATASET = initialize_data()

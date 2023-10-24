@@ -1,10 +1,11 @@
 import dash
+import numpy
 import pandas
 from dash import html, dash, Output, Input, dcc
 from dash.exceptions import PreventUpdate
 
 from Project_data_processor_ML import get_genre_plot
-from dash_plot_generation.data_store import initialize_data, FULL_DATA, OWNER_RANGE_PARTS_SORTED, LABEL_ENCODED_DATASET
+import dash_plot_generation.data_store as ds
 from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_SLIDER, RATING_TABLE, \
     DEV_AVERAGE_RATING_LABEL, DENSITY_LAYOUT_STYLE, WHITE_STEAM, TAB_COLOR, TAB_EDGE, \
     TAB_HEADER_COLOR, DEVELOPER_DROPDOWN, DEV_TOP_GENRES_LABEL, DEV_CCU_LABEL, DEV_GAME_COUNT_LABEL, \
@@ -12,9 +13,10 @@ from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_S
     GENRE_PREDICTION_GRAPH, GENRE_DROPDOWN, DEFAULT_PLOT_STYLE_DICT, GAMES_BY_DEV_GRAPH, MARKET_PERFORMANCE_SCATTER, \
     MP_COMPANY_TYPE_DROPDOWN, create_market_scatter_plot_style, REVENUE_COMPANY_GAME_COUNT, PUB_REVENUE_LABEL, \
     PUB_TOP_GENRES_LABEL, PUB_CCU_LABEL, PUB_GAME_COUNT_LABEL, PUB_REV_PER_GAME_LABEL, PUB_TOP_GAMES, \
-    PUB_AVERAGE_RATING_LABEL, PUBLISHER_DROPDOWN, GAMES_BY_PUB_GRAPH
+    PUB_AVERAGE_RATING_LABEL, PUBLISHER_DROPDOWN, GAMES_BY_PUB_GRAPH, TOP_COMPANY_TABLE_AREA, TOP_REVENUE_COMPANIES
 from dash_plot_generation.utils import get_average_user_rating_label, get_game_count_label, get_top_revenue_game_labels, \
-    get_total_revenue_label, get_top_genre_labels, get_ccu_label, get_average_game_rev_label
+    get_total_revenue_label, get_top_genre_labels, get_ccu_label, get_average_game_rev_label, get_ccu_str, \
+    get_top_revenue_game_names, convert_to_numeric_str
 from visual_presentation.Annual_release_games import get_game_release_figure
 from visual_presentation.Distribution_of_review_rating import get_rating_density_plot
 from visual_presentation.Market_performance_function import plot_market_performance
@@ -76,12 +78,12 @@ def update_company_info(filtered_dataframe: pandas.DataFrame):
                Output(DEV_AVERAGE_RATING_LABEL, "children")],
               inputs=[Input(DEVELOPER_DROPDOWN, "value")])
 def update_dev_info(dev_name):
-    if not (dev_name and isinstance(FULL_DATA, pandas.DataFrame)):
+    if not (dev_name and isinstance(ds.FULL_DATA, pandas.DataFrame)):
         raise PreventUpdate
 
     # Remove empty rows
-    mask = FULL_DATA.developer.apply(lambda x: dev_name in x if isinstance(x, str) else False)
-    dev_data = FULL_DATA[mask]
+    mask = ds.FULL_DATA.developer.apply(lambda x: dev_name in x if isinstance(x, str) else False)
+    dev_data = ds.FULL_DATA[mask]
 
     return update_company_info(dev_data)
 
@@ -95,11 +97,11 @@ def update_dev_info(dev_name):
                Output(PUB_AVERAGE_RATING_LABEL, "children")],
               inputs=[Input(PUBLISHER_DROPDOWN, "value")])
 def update_pub_info(pub_name):
-    if not (pub_name and isinstance(FULL_DATA, pandas.DataFrame)):
+    if not (pub_name and isinstance(ds.FULL_DATA, pandas.DataFrame)):
         raise PreventUpdate
     # Remove empty rows
-    mask = FULL_DATA.publisher.apply(lambda x: pub_name in x if isinstance(x, str) else False)
-    pub_data = FULL_DATA[mask]
+    mask = ds.FULL_DATA.publisher.apply(lambda x: pub_name in x if isinstance(x, str) else False)
+    pub_data = ds.FULL_DATA[mask]
 
     return update_company_info(pub_data)
 
@@ -107,23 +109,23 @@ def update_pub_info(pub_name):
 @APP.callback(Output(GAMES_BY_PUB_GRAPH, "figure"),
               Input(PUBLISHER_DROPDOWN, "value"))
 def get_games_by_pub_table(pub_name):
-    if not (pub_name and isinstance(FULL_DATA, pandas.DataFrame)):
+    if not (pub_name and isinstance(ds.FULL_DATA, pandas.DataFrame)):
         raise PreventUpdate
 
     layout_arguments = DEFAULT_PLOT_STYLE_DICT | dict(margin=dict(l=20, r=20, t=50, b=20))
 
-    return get_game_release_figure(FULL_DATA, pub_name, "publisher", **layout_arguments)
+    return get_game_release_figure(ds.FULL_DATA, pub_name, "publisher", **layout_arguments)
 
 
 @APP.callback(Output(GAMES_BY_DEV_GRAPH, "figure"),
               Input(DEVELOPER_DROPDOWN, "value"))
 def get_games_by_dev_table(dev_name):
-    if not (dev_name and isinstance(FULL_DATA, pandas.DataFrame)):
+    if not (dev_name and isinstance(ds.FULL_DATA, pandas.DataFrame)):
         raise PreventUpdate
 
     layout_arguments = DEFAULT_PLOT_STYLE_DICT | dict(margin=dict(l=20, r=20, t=50, b=20))
 
-    return get_game_release_figure(FULL_DATA, dev_name, "developer", **layout_arguments)
+    return get_game_release_figure(ds.FULL_DATA, dev_name, "developer", **layout_arguments)
 
 
 @APP.callback(Output(RATING_TABS_OUTPUT_AREA, 'children'),
@@ -131,10 +133,10 @@ def get_games_by_dev_table(dev_name):
               Input(RATING_MIN_REVIEWS, "value"),
               Input(RATING_TABS, "value"))
 def update_density_filter_plot(rating_range, min_reviews, active_tab):
-    allowed_indexes = [str_val for (val, str_val) in OWNER_RANGE_PARTS_SORTED[rating_range[0]:rating_range[1] + 1]]
+    allowed_indexes = [str_val for (val, str_val) in ds.OWNER_RANGE_PARTS_SORTED[rating_range[0]:rating_range[1] + 1]]
     allowed_ratings = [" .. ".join([val, allowed_indexes[i + 1]]) for (i, val) in enumerate(allowed_indexes)
                        if i < len(allowed_indexes) - 1]
-    data = get_rating_density_plot(FULL_DATA, allowed_ratings, min_reviews, layout=DENSITY_LAYOUT_STYLE)
+    data = get_rating_density_plot(ds.FULL_DATA, allowed_ratings, min_reviews, layout=DENSITY_LAYOUT_STYLE)
     table_data_key = None
     output_table = False
     output = None
@@ -173,7 +175,7 @@ def get_genre_prediction_table(genre, **kwargs):
                         t=50, b=20)
 
         )
-    fig = get_genre_plot(LABEL_ENCODED_DATASET, genre, **kwargs)
+    fig = get_genre_plot(ds.LABEL_ENCODED_DATASET, genre, **kwargs)
     return fig
 
 
@@ -182,10 +184,56 @@ def get_genre_prediction_table(genre, **kwargs):
               Input(REVENUE_COMPANY_GAME_COUNT, "value"))
 def get_market_performance_scatter(company_type, company_game_onwer_range):
     style = create_market_scatter_plot_style(company_type)
-    return plot_market_performance(df=FULL_DATA, company_type=company_type, game_number_min=company_game_onwer_range[0],
+    return plot_market_performance(df=ds.FULL_DATA, company_type=company_type,
+                                   game_number_min=company_game_onwer_range[0],
                                    game_number_max=company_game_onwer_range[1], **style)
 
 
-if __name__ == "__main__":
-    initialize_data()
+def top_revenue_company_infromation_for_company(data, company_name):
+    ccu_str = get_ccu_str(data)
+    game_count_str = data.shape[0]
+    top_games = get_top_revenue_game_names(data)
+    total_revenue = "".join(["$", convert_to_numeric_str(int(numpy.nansum(data["game_revenue"])))])
+    return {"Company": company_name, "Revenue": total_revenue, "Concurrent users": ccu_str,
+            "Number of games": game_count_str, "Top games": top_games}
+
+
+def get_company_information_for_company_list(company_list, company_type):
+    company_information_list = []
+    for company, value in company_list.iterrows():
+        mask = ds.FULL_DATA[company_type].apply(lambda x: company in x if isinstance(x, str) else False)
+        company_data = ds.FULL_DATA[mask]
+        company_information = top_revenue_company_infromation_for_company(company_data, company)
+        company_information_list.append(company_information)
+    table_data = pandas.DataFrame(company_information_list)
+    return table_data
+
+
+@APP.callback(Output(TOP_COMPANY_TABLE_AREA, 'children'),
+              Input(TOP_REVENUE_COMPANIES, "value"))
+def get_top_companies_table(company_type, get_largest_to=50):
+    data = ds.FULL_DATA[[company_type, "game_revenue"]].groupby(company_type).sum()
+
+    top_n_companies = data.nlargest(get_largest_to, 'game_revenue')
+
+    data = get_company_information_for_company_list(top_n_companies, company_type)
+
+    output = html.Div(dash.dash_table.DataTable(data.to_dict('records'),
+                                                id=RATING_TABLE,
+                                                style_data={'backgroundColor': TAB_COLOR,
+                                                            'color': WHITE_STEAM,
+                                                            'border': '1px solid ' + TAB_EDGE},
+                                                style_header={'backgroundColor': TAB_HEADER_COLOR,
+                                                              'color': WHITE_STEAM,
+                                                              'border': '1px solid ' + TAB_EDGE}))
+
+    return [output]
+
+
+def start_server():
     APP.run_server(debug=True, host="0.0.0.0")
+
+
+if __name__ == "__main__":
+    ds.initialize_data()
+    start_server()

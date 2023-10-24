@@ -73,3 +73,5 @@ def create_market_scatter_plot_style(company_type):
 
 REVENUE_COMPANY_GAME_COUNT = "revenue_slider_company_popularity"
 PUBLISHER_DROPDOWN = "publisher_dropdown"
+TOP_REVENUE_COMPANIES = "top_companies_tabs"
+TOP_COMPANY_TABLE_AREA = "top_company_area"
