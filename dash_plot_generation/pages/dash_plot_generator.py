@@ -15,7 +15,6 @@ from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_S
 
 from dash_plot_generation.utils import get_cumulative_owner_game_count_limits_for_dev_and_pub
 
-global APP
 
 # unique_publishers = extract_unique_companies(FULL_DATA["publisher"].apply(lambda x: split_companies(x)))
 # unique_developers = extract_unique_companies(FULL_DATA["developer"].apply(lambda x: split_companies(x)))
