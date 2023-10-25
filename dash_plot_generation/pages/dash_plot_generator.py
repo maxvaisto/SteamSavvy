@@ -15,7 +15,6 @@ from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_S
 
 from dash_plot_generation.utils import get_cumulative_owner_game_count_limits_for_dev_and_pub
 
-
 # unique_publishers = extract_unique_companies(FULL_DATA["publisher"].apply(lambda x: split_companies(x)))
 # unique_developers = extract_unique_companies(FULL_DATA["developer"].apply(lambda x: split_companies(x)))
 unique_publishers = ["Valve"]
@@ -41,7 +40,16 @@ cumulative_owner_ranges = get_cumulative_owner_game_count_limits_for_dev_and_pub
 cum_range_limits = {
     "min": min(cumulative_owner_ranges["developer"]["min"], cumulative_owner_ranges["publisher"]["max"]),
     "max": max(cumulative_owner_ranges["developer"]["max"], cumulative_owner_ranges["publisher"]["max"])}
-
+publisher_str = "Maximum "
+range_marks = {
+    int(cum_range_limits["min"]): {'label': str(cum_range_limits["min"]), "style": {"color": WHITE_STEAM}},
+    int(cumulative_owner_ranges["developer"]["max"]):
+        {'label': f"Developer maximum {str(cumulative_owner_ranges['developer']['max'])}",
+         "style": {"color": WHITE_STEAM}},
+    int(cumulative_owner_ranges["publisher"]["max"]):
+        {'label': f"Publisher maximum {str(cumulative_owner_ranges['publisher']['max'])}",
+         "style": {"color": WHITE_STEAM}}
+}
 layout = html.Div(
     children=[
         html.Div(className="row", children=[
@@ -246,8 +254,9 @@ layout = html.Div(
                                                                                                     b=20)))
                                                                          )],
                                                      style={"width": "80%", "vertical-align": "top",
-                                                            "display": "inline-block", "margin-right": "5%"}),
-                                            html.Div(children=[html.H5("Filters"),
+                                                            "display": "inline-block"}),
+                                            html.Div(children=[html.H6("Filters", style={"margin-bottom":"20px"}),
+                                                               html.P("Company type"),
                                                                dcc.Dropdown(id=MP_COMPANY_TYPE_DROPDOWN,
                                                                             className='dash-dropdown',
                                                                             value="developer",
@@ -257,28 +266,37 @@ layout = html.Div(
                                                                                     style={'color': WHITE_STEAM}),
                                                                                     "value": company_type} for
                                                                                 company_type
-                                                                                in ["developer", "publisher"]]),
-                                                               dcc.RangeSlider(id=REVENUE_COMPANY_GAME_COUNT,
+                                                                                in ["developer", "publisher"]],
+                                                                            style={"margin-bottom": "20px"}),
+                                                               html.P("Game count"),
+                                                               html.Div(children=[dcc.RangeSlider(
+                                                                   id=REVENUE_COMPANY_GAME_COUNT,
                                                                                min=cum_range_limits["min"],
                                                                                max=cum_range_limits["max"],
                                                                                step=cum_range_limits["min"],
                                                                                value=[cum_range_limits["min"],
                                                                                       cum_range_limits["max"]],
-                                                                               marks=None,
-                                                                               tooltip={"placement": "right",
+                                                                               marks=range_marks,
+                                                                               tooltip={"placement": "left",
                                                                                         "always_visible": True},
                                                                                vertical=True,
-                                                                               verticalHeight=200),
+                                                                               verticalHeight=200)],
+                                                                        style={"margin":"40px 20px 10px auto",
+                                                                               "padding-left":"30px"})
+                                                               ,
                                                                ],
                                                      style={"width": "15%", "vertical-align": "top",
-                                                            "display": "inline-block"})
+                                                            "display": "inline-block", "padding-right":"10px",
+                                                            "padding-left": "15px",
+                                                            "border-left": "2px solid " + TAB_EDGE})
                                         ], style={"display": "flex", "align-items": "flex-start",
                                                   "margin-bottom": "50px",
-                                                  "height":"500px"}
+                                                  "height": "500px",
+                                                  "margin": "20px 0px 20px 20px"}
                                         ),
                                         html.Div(id="Market performance_second",
                                                  children=[
-                                                     html.H4("Top companies by revenue",
+                                                     html.H6("Top companies by revenue",
                                                              style={"margin-bottom": "20px"}),
                                                      dcc.Tabs(
                                                          id=TOP_REVENUE_COMPANIES,
@@ -313,7 +331,7 @@ layout = html.Div(
 
             ],
                 className="panel-1",
-                style={'width': '900px', 'margin-right':'50px'}),
+                style={'width': '900px', 'margin-right': '50px'}),
             html.Div(children=[
                 dcc.Tabs(id="company_information", value="tab3", className="panel-2", children=[
                     dcc.Tab(label="Developer infromation",

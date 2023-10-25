@@ -29,12 +29,13 @@ layout = html.Div([
                        "game industry, with a focus on platforms like Steam, a major player in the PC gaming market."],
                        className="paragraph"),
                 html.H3("Our Approach & Why steam"),
-                html.P("Steam, with its extensive library of over 50,000 games and 45,000 developers, is a central "
+                html.P(["Steam, with its extensive library of over 50,000 games and 45,000 developers, is a central "
                        "hub in the gaming distribution world. It's a treasure trove of data, including game revenues, "
-                       "ownership statistics, and player reviews."
-                       ""
-                       "Our approach revolves around two core elements:",
-                       className="paragraph"),
+                       "ownership statistics, and player reviews.",
+                       html.Br(),
+                       html.Br(),
+                       "Our approach revolves around two core elements:"],
+                       className="paragraph", style={"margin-bottom":"50px"}),
                 html.Div(className="w-layout-blockcontainer w-container side-listing",
                          children=[
                              html.Div(className="w-layout-blockcontainer w-container small_listing",
@@ -63,7 +64,7 @@ layout = html.Div([
         html.Div(className="w-layout-blockcontainer w-container container-6",
                  children=[
                      html.H2(className="centered-heading",
-                             children="Project developers"),
+                             children="Project creators"),
                      html.P(className="centered-subheading",
                             children="This project was not build in a day nor by just one person. Everyone "
                                      "contributed and focused on a unique aspect of the project."),
@@ -78,10 +79,11 @@ layout = html.Div([
                                                    target="_blank"
                                                ),
                                                html.P(className="team-member-name", children="Linsen Gao"),
-                                               html.P(className="team-member-position", children="Master's Data "
-                                                                                                 "Science "
-                                                                                                 "StudentUniversity "
-                                                                                                 "of Helsinki"),
+                                               html.P(className="team-member-position", children=["Data Science "
+                                                                                                  "Master's Student",
+                                                                                                  html.Br(),
+                                                                                                  "University "
+                                                                                                 "of Helsinki"]),
                                                html.A(
                                                    html.Img(alt="",
                                                             src="assets/team/logo.png",
@@ -99,10 +101,11 @@ layout = html.Div([
                                                    target="_blank"
                                                ),
                                                html.P(className="team-member-name", children="Sergei Panarin"),
-                                               html.P(className="team-member-position", children="Master's Data "
-                                                                                                 "Science "
-                                                                                                 "StudentUniversity "
-                                                                                                 "of Helsinki"),
+                                               html.P(className="team-member-position", children=["Data Science "
+                                                                                                  "Master's Student",
+                                                                                                  html.Br(),
+                                                                                                  "University "
+                                                                                                 "of Helsinki"]),
 
                                                html.A(
                                                    html.Img(alt="",
@@ -121,10 +124,11 @@ layout = html.Div([
                                                    target="_blank"
                                                ),
                                                html.P(className="team-member-name", children="Max Väistö"),
-                                               html.P(className="team-member-position", children="Master's Data "
-                                                                                                 "Science "
-                                                                                                 "StudentUniversity "
-                                                                                                 "of Helsinki"),
+                                               html.P(className="team-member-position", children=["Data Science "
+                                                                                                  "Master's Student",
+                                                                                                  html.Br(),
+                                                                                                  "University "
+                                                                                                 "of Helsinki"]),
 
                                                html.A(
                                                html.Img(alt="",
