@@ -237,5 +237,4 @@ def start_server():
 
 
 if __name__ == "__main__":
-    print("Here!")
     start_server()

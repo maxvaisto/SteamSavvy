@@ -5,7 +5,7 @@ dash.register_page(__name__, path='/')
 
 layout = html.Div([
     html.Div(children=[
-        html.Div(className="w-layout-blockcontainer container-5 w-container",
+        html.Div(className="w-layout-blockcontainer w-container container-5",
                  children=[
                      html.H1("SteamSavvy - Steam game data insights")
                  ]),

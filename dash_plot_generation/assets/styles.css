@@ -399,6 +399,7 @@ div.padding-large {
 
 .container-5 {
   margin-top: 50px;
+        margin-bottom: 0px;
 }
 
 .paragraph {
@@ -435,7 +436,7 @@ div.padding-large {
 .container-6 {
   width: 100%;
   max-width: 940px;
-    margin: 100px auto;
+    margin: 0px auto 100px auto;
 }
 
 .centered-heading {
@@ -529,6 +530,7 @@ div.padding-large {
 @media screen and (max-width: 991px) {
   .container-6 {
     max-width: 728px;
+          margin-top: 0px;
   }
 
   .team-grid {

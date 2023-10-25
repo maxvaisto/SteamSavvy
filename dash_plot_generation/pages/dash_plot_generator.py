@@ -13,12 +13,13 @@ from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_S
     PUB_REV_PER_GAME_LABEL, PUB_REVENUE_LABEL, GAMES_BY_PUB_GRAPH, PUBLISHER_DROPDOWN, TOP_REVENUE_COMPANIES, \
     TOP_COMPANY_TABLE_AREA
 
-from dash_plot_generation.utils import get_cumulative_owner_game_count_limits_for_dev_and_pub
+from dash_plot_generation.utils import get_cumulative_owner_game_count_limits_for_dev_and_pub, get_all_genres, \
+    extract_unique_companies, split_companies
 
-# unique_publishers = extract_unique_companies(FULL_DATA["publisher"].apply(lambda x: split_companies(x)))
-# unique_developers = extract_unique_companies(FULL_DATA["developer"].apply(lambda x: split_companies(x)))
-unique_publishers = ["Valve"]
-unique_developers = ["Valve"]
+unique_publishers = extract_unique_companies(ds.FULL_DATA["publisher"].apply(lambda x: split_companies(x)))
+unique_developers = extract_unique_companies(ds.FULL_DATA["developer"].apply(lambda x: split_companies(x)))
+# unique_publishers = ["Valve"]
+# unique_developers = ["Valve"]
 
 # Genre performance table_values
 # genre_owners, genre_revenue = get_genre_popularity_counts(FULL_DATA, 6)
@@ -29,8 +30,9 @@ genre_revenue = {key: val for (key, val) in
                  zip(["Action", "Adventure", "RPG", "Puzzle", "Strategy", "Other"],
                      [0.5, 0.4, 0.3, 0.4, 0.6, 0.7])}
 
-# unique_genres = get_all_genres(FULL_DATA)
-unique_genres = ["Action", "Adventure"]
+unique_genres = get_all_genres(ds.FULL_DATA)
+# unique_genres = ["Action", "Adventure"]
+
 # Game popularity filter values
 max_reviews = numpy.nanmax(ds.FULL_DATA.apply(lambda x: x["positive"] + x["negative"], axis=1))
 owner_range_dict = {index: val_str for (index, (val, val_str)) in enumerate(ds.OWNER_RANGE_PARTS_SORTED)}

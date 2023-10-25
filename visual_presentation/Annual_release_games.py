@@ -5,6 +5,8 @@ import pandas
 import pandas as pd
 import re
 import plotly.express as px
+import plotly.graph_objs
+
 from dash_plot_generation.data_store import FULL_DATA
 
 
@@ -22,7 +24,7 @@ def get_game_release_figure(df: pd.DataFrame, company_name: str, show_column: st
         df_copy['year'] = pd.to_numeric(df_copy['year'])
 
         # Get all years
-        all_years = list(range(df_copy['year'].min(), df_copy['year'].max() + 1))
+        all_years = list(range(int(df_copy['year'].min()), 2024))
 
         # Create dud df
         all_years_df = pd.DataFrame({show_column: company_name, 'year': all_years, 'game_number': 0})
@@ -44,19 +46,22 @@ def get_game_release_figure(df: pd.DataFrame, company_name: str, show_column: st
 
     company_games = copy_df[copy_df[show_column] == company_name]
     games_grouped_by_year = company_games.groupby([show_column, 'year']).size().reset_index(name='game_number')
+    try:
 
-    games_grouped_by_year_full = add_missing_years(games_grouped_by_year)
+        games_grouped_by_year_full = add_missing_years(games_grouped_by_year)
 
-    if show_column == "publisher":
-        title = f'Games Published by Year - {company_name}'
-    elif show_column == "developer":
-        title = f'Games Developer by Year - {company_name}'
-    else:
-        raise KeyError(f"Invalid column argument: {show_column}")
+        if show_column == "publisher":
+            title = f'Games Published by Year - {company_name}'
+        elif show_column == "developer":
+            title = f'Games Developer by Year - {company_name}'
+        else:
+            raise KeyError(f"Invalid column argument: {show_column}")
 
-    fig = px.bar(games_grouped_by_year_full, x='year', y='game_number',
-                 title=title,
-                 labels={'year': 'Year', 'game_number': 'Game Number'})
+        fig = px.bar(games_grouped_by_year_full, x='year', y='game_number',
+                     title=title,
+                     labels={'year': 'Year', 'game_number': 'Game Number'})
+    except Exception as ex:
+        fig = plotly.graph_objs.Figure()
 
     fig.update_layout(showlegend=False)
     fig.update_layout(**layout_arguments)
