@@ -153,13 +153,14 @@ layout = html.Div(
                                              html.Div(id="Game pop top div",
                                                       children=[
 
-                                                          html.Div(children=[html.P("""The free to play market has taken the 
-                                                          video game market by storm. It is, however, not clear
-                                                          which games in each category are performing the best in terms 
-                                                          of user rating. This section contains tools to analyze the
-                                                          distribution of user ratings for both free and non-free games
-                                                          based on the game amount of owners the games have and on a
-                                                          minimum review amount criteria.""",
+                                                          html.Div(children=[html.P("""The free-to-play gaming 
+                                                          sector has made a significant impact on the video game 
+                                                          industry. Yet, identifying the top-performing games within 
+                                                          specific categories based on user ratings remains a challenge.  
+                                                          This section contains tools to analyze the distribution of 
+                                                          user ratings for both free and non-free games based on the 
+                                                          game amount of owners the games have and on a minimum review 
+                                                          amount criteria.""",
                                                                                     className="text-note-text")],
                                                                    className='text-note-div'),
                                                           html.Div(id="game popularity filters",
@@ -313,7 +314,7 @@ layout = html.Div(
 
             ],
                 className="panel-1",
-                style={'width': '900px'}),
+                style={'width': '900px', 'margin-right':'50px'}),
             html.Div(children=[
                 dcc.Tabs(id="company_information", value="tab3", className="panel-2", children=[
                     dcc.Tab(label="Developer infromation",
@@ -508,7 +509,7 @@ layout = html.Div(
                  style={'width': '100%', "padding-top": "30px", 'padding-left': "50px"}),
     ],
     style={"font-family": "Tahoma"},
-    className="body"
+    className="body-dashboard"
 )
 dash.register_page(
     __name__,
