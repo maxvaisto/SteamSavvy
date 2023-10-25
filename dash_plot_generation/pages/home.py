@@ -1,7 +1,6 @@
 import dash
 from dash import html
 
-global APP
 
 dash.register_page(__name__, path='/')
 

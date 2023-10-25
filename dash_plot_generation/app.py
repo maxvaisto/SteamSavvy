@@ -4,8 +4,9 @@ import pandas
 from dash import html, dash, Output, Input, dcc
 from dash.exceptions import PreventUpdate
 
-from Project_data_processor_ML import get_genre_plot
 import dash_plot_generation.data_store as ds
+ds.initialize_data()
+from Project_data_processor_ML import get_genre_plot
 from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_SLIDER, RATING_TABLE, \
     DEV_AVERAGE_RATING_LABEL, DENSITY_LAYOUT_STYLE, WHITE_STEAM, TAB_COLOR, TAB_EDGE, \
     TAB_HEADER_COLOR, DEVELOPER_DROPDOWN, DEV_TOP_GENRES_LABEL, DEV_CCU_LABEL, DEV_GAME_COUNT_LABEL, \
@@ -21,14 +22,15 @@ from visual_presentation.Annual_release_games import get_game_release_figure
 from visual_presentation.Distribution_of_review_rating import get_rating_density_plot
 from visual_presentation.Market_performance_function import plot_market_performance
 
-APP = dash.Dash(
+app = dash.Dash(
     name=__name__,
     use_pages=True,
     external_stylesheets=['/assets/styles.css',
                           'https://codepen.io/chriddyp/pen/bWLwgP.css']
 )
 
-APP.layout = html.Div([
+server = app.server
+app.layout = html.Div([
     html.Nav(className="navbar", children=[
         html.A("SteamSavvy - Steam game data insights", href="/",
                style={"margin-left": "60px", "display": "inline-block"},
@@ -69,7 +71,7 @@ def update_company_info(filtered_dataframe: pandas.DataFrame):
         company_top_games_label, user_rating_value
 
 
-@APP.callback([Output(DEV_REVENUE_LABEL, "children"),
+@app.callback([Output(DEV_REVENUE_LABEL, "children"),
                Output(DEV_TOP_GENRES_LABEL, "children"),
                Output(DEV_CCU_LABEL, "children"),
                Output(DEV_GAME_COUNT_LABEL, "children"),
@@ -88,7 +90,7 @@ def update_dev_info(dev_name):
     return update_company_info(dev_data)
 
 
-@APP.callback([Output(PUB_REVENUE_LABEL, "children"),
+@app.callback([Output(PUB_REVENUE_LABEL, "children"),
                Output(PUB_TOP_GENRES_LABEL, "children"),
                Output(PUB_CCU_LABEL, "children"),
                Output(PUB_GAME_COUNT_LABEL, "children"),
@@ -106,7 +108,7 @@ def update_pub_info(pub_name):
     return update_company_info(pub_data)
 
 
-@APP.callback(Output(GAMES_BY_PUB_GRAPH, "figure"),
+@app.callback(Output(GAMES_BY_PUB_GRAPH, "figure"),
               Input(PUBLISHER_DROPDOWN, "value"))
 def get_games_by_pub_table(pub_name):
     if not (pub_name and isinstance(ds.FULL_DATA, pandas.DataFrame)):
@@ -117,7 +119,7 @@ def get_games_by_pub_table(pub_name):
     return get_game_release_figure(ds.FULL_DATA, pub_name, "publisher", **layout_arguments)
 
 
-@APP.callback(Output(GAMES_BY_DEV_GRAPH, "figure"),
+@app.callback(Output(GAMES_BY_DEV_GRAPH, "figure"),
               Input(DEVELOPER_DROPDOWN, "value"))
 def get_games_by_dev_table(dev_name):
     if not (dev_name and isinstance(ds.FULL_DATA, pandas.DataFrame)):
@@ -128,7 +130,7 @@ def get_games_by_dev_table(dev_name):
     return get_game_release_figure(ds.FULL_DATA, dev_name, "developer", **layout_arguments)
 
 
-@APP.callback(Output(RATING_TABS_OUTPUT_AREA, 'children'),
+@app.callback(Output(RATING_TABS_OUTPUT_AREA, 'children'),
               Input(RATING_SLIDER, "value"),
               Input(RATING_MIN_REVIEWS, "value"),
               Input(RATING_TABS, "value"))
@@ -164,7 +166,7 @@ def update_density_filter_plot(rating_range, min_reviews, active_tab):
     return [output]
 
 
-@APP.callback(Output(GENRE_PREDICTION_GRAPH, "figure"),
+@app.callback(Output(GENRE_PREDICTION_GRAPH, "figure"),
               Input(GENRE_DROPDOWN, "value")
               )
 def get_genre_prediction_table(genre, **kwargs):
@@ -179,7 +181,7 @@ def get_genre_prediction_table(genre, **kwargs):
     return fig
 
 
-@APP.callback(Output(MARKET_PERFORMANCE_SCATTER, "figure"),
+@app.callback(Output(MARKET_PERFORMANCE_SCATTER, "figure"),
               Input(MP_COMPANY_TYPE_DROPDOWN, "value"),
               Input(REVENUE_COMPANY_GAME_COUNT, "value"))
 def get_market_performance_scatter(company_type, company_game_onwer_range):
@@ -209,7 +211,7 @@ def get_company_information_for_company_list(company_list, company_type):
     return table_data
 
 
-@APP.callback(Output(TOP_COMPANY_TABLE_AREA, 'children'),
+@app.callback(Output(TOP_COMPANY_TABLE_AREA, 'children'),
               Input(TOP_REVENUE_COMPANIES, "value"))
 def get_top_companies_table(company_type, get_largest_to=50):
     data = ds.FULL_DATA[[company_type, "game_revenue"]].groupby(company_type).sum()
@@ -231,10 +233,9 @@ def get_top_companies_table(company_type, get_largest_to=50):
 
 
 def start_server():
-    APP.run_server(debug=True, host="0.0.0.0")
+    app.run_server(debug=True, host="0.0.0.0")
 
 
 if __name__ == "__main__":
     print("Here!")
-    ds.initialize_data()
     start_server()

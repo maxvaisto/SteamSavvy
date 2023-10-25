@@ -1,0 +1,1 @@
+web: cd dash_plot_generation && gunicorn app:server
