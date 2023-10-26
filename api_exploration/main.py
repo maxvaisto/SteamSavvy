@@ -213,6 +213,7 @@ def combine_and_save_dataframes_in_dir(path, output_file_name):
     df.to_csv(output_file_name + ".csv")
     df.to_json(output_file_name + ".json")
 
+
 if __name__ == "__main__":
 
     path = "file_segments"
@@ -229,4 +230,6 @@ if __name__ == "__main__":
         print(f"Saved file {file_name}!")
 
     # plot_statistics_data(df)
-    pass
+
+    # Create a new full dataframe
+    combine_and_save_dataframes_in_dir(path, "full_game_data")

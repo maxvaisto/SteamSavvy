@@ -17,6 +17,7 @@ import plotly
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
+
 from math import isnan
 
 import plotly.graph_objects as go
@@ -71,6 +72,7 @@ def genre_data_aggregation(data, interval):
 
     # preprocess the release date column into the pandas datetime format
     data['release_date'] = pd.to_datetime(data['release_date'], dayfirst=True, format="mixed", errors='coerce')
+    data = data_cutoff(data)
 
     # remove whitespaces
     data['genres'] = data['genres'].map(lambda x: list(map(str.strip, x)))
@@ -144,6 +146,22 @@ def encode_time(df):
     df['release_date'] = df['release_date'].map(dt.datetime.toordinal)
     return df
 
+# Filters the data between year 1997 and present time, sorry Hellraid :(
+# @param: pandas dataframe with the full data
+# @return: pandas dataframe filtered by release_date
+def data_cutoff(df):
+    start_date = '1997-01-01'
+    end_date = dt.datetime.now()
+    
+    mask = (df['release_date'] >= start_date) & (df['release_date'] <= end_date)
+    filtered_df = df[mask]
+    return filtered_df
+
+def data_processing(df):
+    df = clean_index(df)
+    label_encoding(df)
+    df = replace_owner_str_with_average_number(df)
+    return df
 
 def lin_reg(df):
     y = np.asarray(df['owners'])
@@ -156,10 +174,18 @@ def lin_reg(df):
     # model.score(X_train, y_train) #check score
     return model
 
-
+"""
 # Plot the given genre data
 def plot_genre_plot(dict_data: object, genre: object) -> object:
     plt.scatter(dict_data[genre]["release_date"], dict_data[genre]["owners"])
+    plt.show()
+    """
+    
+# Plot the given genre data with slope and predictions
+def plot_genre_plot(dict_data: object, genre: object, models: object, predictions: object, lines: object, dates: object) -> object:
+    plt.scatter(dict_data[genre]["release_date"], dict_data[genre]["owners"], color='blue', label='Actual data points')
+    plt.plot(dict_data[genre]["release_date"], lines[genre], color='red', label='Regression line', linewidth=2)
+    plt.scatter(dates, predictions[genre], color='green', marker='o', label='Future Predictions', s=100)
     plt.show()
 
 # Plots the release date against owners
@@ -169,6 +195,26 @@ def get_genre_plot(dict_data: Dict[str, pd.DataFrame], genre: str, **figure_argu
     fig.update(**figure_arguments)
     return fig
 
+
+# This function congregates all machine learning algorithms, returns 3 dictionaries with models, predictions and slopes, all per genre
+def perform_regression_analysis_on_data(dict_data, dates):
+    models = {}
+    predictions = {}
+    lines = {}
+    
+    process_data = dict_data
+    for x in process_data:  
+        dict_data[x] = encode_time(dict_data[x])
+        
+        models[x] = lin_reg(dict_data[x])
+        predictions[x] = models[x].predict(dates)
+        lines[x] = models[x].predict(np.asarray(dict_data[x]['release_date']).reshape(-1, 1))
+        
+        # ensure that slopes and predictions dont go below 0
+        predictions[x] = np.maximum(predictions[x], 1)
+        lines[x] = np.maximum(lines[x], 1)
+        
+    return models, predictions, lines
 
 def get_data_interval(days):
     base = dt.datetime.now()
@@ -180,36 +226,46 @@ def get_data_interval(days):
     dates = [t.toordinal() for t in parts]
     return dates
 
+# Function to check if the slope ratio of owners vs number of games is higher than average
+# If yes, then it is an opportunity with many owners and few games
+def get_opportunities(owner_models, number_models, genre):
+    average = (owner_models[genre] / number_models[genre]).mean()
+    opportunity = owner_models[genre].coef_[0][0]/number_models[genre].coef_[0][0]
+    
+    if opportunity > average:
+        return True
+    else:
+        return False
+    
 
 if __name__ == "__main__":
 
     full_data_df = read_data()
-    full_data_df = clean_index(full_data_df)
-
-    label_encoding(full_data_df)
-    data = replace_owner_str_with_average_number(full_data_df)
+    full_data_df = data_processing(full_data_df)
+    
     owners_genre_data, number_genre_data = genre_data_aggregation(full_data_df, 2)
 
-    genre = "Free to Play"
+    genre = "Action"
     
-    plot_genre_plot(owners_genre_data, genre)
-    plot_genre_plot(number_genre_data, genre)
-
     # 730 days = 2 years
     dates = np.array(get_data_interval(730))
     dates = dates.reshape(len(dates), 1)
 
-    # GET ALL MODELS FOR ALL GENRES
-    models = {}
-    predictions = {}
-    process_data = owners_genre_data
-    for x in process_data:  
-        owners_genre_data[x] = encode_time(owners_genre_data[x])
-        models[x] = lin_reg(owners_genre_data[x])
-
-    for genre in models:
-        predictions[genre] = models[genre].predict(dates)
-
+    # GET ALL MODELS, PREDICTIONS AND SLOPE LINES FOR ALL GENRES
+    # Owner = owner count per period of time
+    # Number = number of games per period of time
+    owner_models, owner_predictions, owner_lines = perform_regression_analysis_on_data(owners_genre_data, dates)
+    number_models, number_predictions, number_lines = perform_regression_analysis_on_data(number_genre_data, dates)
+    
+    # return data to datetime for plots
+    owners_genre_data[genre]["release_date"] = owners_genre_data[genre]["release_date"].apply(lambda x: dt.datetime.fromordinal(x))
+    number_genre_data[genre]["release_date"] = number_genre_data[genre]["release_date"].apply(lambda x: dt.datetime.fromordinal(x))
+    vectorized_fromordinal = np.vectorize(dt.datetime.fromordinal)
+    dates = vectorized_fromordinal(dates)
+    
+    plot_genre_plot(owners_genre_data, genre, owner_models, owner_predictions, owner_lines, dates)
+    plot_genre_plot(number_genre_data, genre, number_models, number_predictions, number_lines, dates)
+    
     # GET POINT OF REFERENCE
 
     pass
