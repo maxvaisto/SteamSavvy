@@ -1,4 +1,6 @@
 # html handles
+import os
+
 RATING_MIN_REVIEWS = "min_reviews_id"
 RATING_SLIDER = "rating_slider"
 RATING_TABLE = "rating_data_table"
@@ -75,3 +77,9 @@ REVENUE_COMPANY_GAME_COUNT = "revenue_slider_company_popularity"
 PUBLISHER_DROPDOWN = "publisher_dropdown"
 TOP_REVENUE_COMPANIES = "top_companies_tabs"
 TOP_COMPANY_TABLE_AREA = "top_company_area"
+PRECALCULATED_DATA_PATH = os.path.normpath(os.getcwd() + os.sep + "precalculated_data")
+OWNER_LIST_PATH = os.path.join(PRECALCULATED_DATA_PATH, "sorted_owner_list")
+DEVELOPER_LIST_PATH = os.path.join(PRECALCULATED_DATA_PATH, "developer_list")
+PUBLISHER_LIST_PATH = os.path.join(PRECALCULATED_DATA_PATH, "publisher_list")
+FACTORIZED_GAME_DATAFRAME_PATH = os.path.join(PRECALCULATED_DATA_PATH, "encoded_game_dataframe")
+GENRE_LIST_PATH = os.path.join(PRECALCULATED_DATA_PATH, "genre_list")

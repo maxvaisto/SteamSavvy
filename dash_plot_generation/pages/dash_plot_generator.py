@@ -1,3 +1,7 @@
+import os
+import signal
+import sys
+from time import time
 import numpy
 import dash
 from dash import html, dcc
@@ -11,38 +15,33 @@ from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_S
     GAMES_BY_DEV_GRAPH, MARKET_PERFORMANCE_SCATTER, MP_COMPANY_TYPE_DROPDOWN, REVENUE_COMPANY_GAME_COUNT, \
     PUB_AVERAGE_RATING_LABEL, PUB_TOP_GENRES_LABEL, PUB_CCU_LABEL, PUB_GAME_COUNT_LABEL, PUB_TOP_GAMES, \
     PUB_REV_PER_GAME_LABEL, PUB_REVENUE_LABEL, GAMES_BY_PUB_GRAPH, PUBLISHER_DROPDOWN, TOP_REVENUE_COMPANIES, \
-    TOP_COMPANY_TABLE_AREA
+    TOP_COMPANY_TABLE_AREA, GENRE_LIST_PATH, PUBLISHER_LIST_PATH, DEVELOPER_LIST_PATH
 
 from dash_plot_generation.utils import get_cumulative_owner_game_count_limits_for_dev_and_pub, get_all_genres, \
-    extract_unique_companies, split_companies
+    extract_unique_companies, split_companies, get_genre_popularity_counts, load_genres, load_company_names
 
-unique_publishers = extract_unique_companies(ds.FULL_DATA["publisher"].apply(lambda x: split_companies(x)))
-unique_developers = extract_unique_companies(ds.FULL_DATA["developer"].apply(lambda x: split_companies(x)))
-# unique_publishers = ["Valve"]
-# unique_developers = ["Valve"]
+start_time = time()
+
+# Unique publishers
+unique_developers, unique_publishers = load_company_names(DEVELOPER_LIST_PATH, PUBLISHER_LIST_PATH)
 
 # Genre performance table_values
-# genre_owners, genre_revenue = get_genre_popularity_counts(FULL_DATA, 6)
-genre_owners = {key: val for (key, val) in
-                zip(["Action", "Adventure", "RPG", "Puzzle", "Strategy", "Other"],
-                    [0.7, 0.5, 0.1, 0.4, 0.3, 0.7])}
-genre_revenue = {key: val for (key, val) in
-                 zip(["Action", "Adventure", "RPG", "Puzzle", "Strategy", "Other"],
-                     [0.5, 0.4, 0.3, 0.4, 0.6, 0.7])}
+genre_owners, genre_revenue = get_genre_popularity_counts(ds.FULL_DATA, 6)
 
-unique_genres = get_all_genres(ds.FULL_DATA)
-# unique_genres = ["Action", "Adventure"]
+unique_genres = load_genres(GENRE_LIST_PATH)
 
 # Game popularity filter values
 max_reviews = numpy.nanmax(ds.FULL_DATA.apply(lambda x: x["positive"] + x["negative"], axis=1))
 owner_range_dict = {index: val_str for (index, (val, val_str)) in enumerate(ds.OWNER_RANGE_PARTS_SORTED)}
 min_owner = min(owner_range_dict.keys())
 max_owner = max(owner_range_dict.keys())
+
 cumulative_owner_ranges = get_cumulative_owner_game_count_limits_for_dev_and_pub(ds.FULL_DATA)
+
 cum_range_limits = {
     "min": min(cumulative_owner_ranges["developer"]["min"], cumulative_owner_ranges["publisher"]["max"]),
     "max": max(cumulative_owner_ranges["developer"]["max"], cumulative_owner_ranges["publisher"]["max"])}
-publisher_str = "Maximum "
+
 range_marks = {
     int(cum_range_limits["min"]): {'label': str(cum_range_limits["min"]), "style": {"color": WHITE_STEAM}},
     int(cumulative_owner_ranges["developer"]["max"]):
@@ -52,6 +51,9 @@ range_marks = {
         {'label': f"Publisher maximum {str(cumulative_owner_ranges['publisher']['max'])}",
          "style": {"color": WHITE_STEAM}}
 }
+
+end_time = time()
+print("Data for dashboard took", end_time - start_time, "seconds")
 layout = html.Div(
     children=[
         html.Div(className="row", children=[
@@ -257,7 +259,7 @@ layout = html.Div(
                                                                          )],
                                                      style={"width": "80%", "vertical-align": "top",
                                                             "display": "inline-block"}),
-                                            html.Div(children=[html.H6("Filters", style={"margin-bottom":"20px"}),
+                                            html.Div(children=[html.H6("Filters", style={"margin-bottom": "20px"}),
                                                                html.P("Company type"),
                                                                dcc.Dropdown(id=MP_COMPANY_TYPE_DROPDOWN,
                                                                             className='dash-dropdown',
@@ -273,22 +275,22 @@ layout = html.Div(
                                                                html.P("Game count"),
                                                                html.Div(children=[dcc.RangeSlider(
                                                                    id=REVENUE_COMPANY_GAME_COUNT,
-                                                                               min=cum_range_limits["min"],
-                                                                               max=cum_range_limits["max"],
-                                                                               step=cum_range_limits["min"],
-                                                                               value=[cum_range_limits["min"],
-                                                                                      cum_range_limits["max"]],
-                                                                               marks=range_marks,
-                                                                               tooltip={"placement": "left",
-                                                                                        "always_visible": True},
-                                                                               vertical=True,
-                                                                               verticalHeight=200)],
-                                                                        style={"margin":"40px 20px 10px auto",
-                                                                               "padding-left":"30px"})
-                                                               ,
+                                                                   min=cum_range_limits["min"],
+                                                                   max=cum_range_limits["max"],
+                                                                   step=cum_range_limits["min"],
+                                                                   value=[cum_range_limits["min"],
+                                                                          cum_range_limits["max"]],
+                                                                   marks=range_marks,
+                                                                   tooltip={"placement": "left",
+                                                                            "always_visible": True},
+                                                                   vertical=True,
+                                                                   verticalHeight=200)],
+                                                                   style={"margin": "40px 20px 10px auto",
+                                                                          "padding-left": "30px"})
+                                                ,
                                                                ],
                                                      style={"width": "15%", "vertical-align": "top",
-                                                            "display": "inline-block", "padding-right":"10px",
+                                                            "display": "inline-block", "padding-right": "10px",
                                                             "padding-left": "15px",
                                                             "border-left": "2px solid " + TAB_EDGE})
                                         ], style={"display": "flex", "align-items": "flex-start",
@@ -536,3 +538,6 @@ dash.register_page(
     description="Main dashboard",
     path="/dashboard",
 )
+
+final_time = time()
+print("Full read took", final_time - end_time, "seconds")

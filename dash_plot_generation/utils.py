@@ -1,12 +1,15 @@
-import math
+import pickle
 import re
 from collections import Counter
 from typing import Sequence, Optional, Any
 
 import numpy
+import numpy as np
 import pandas
 from dash import html
 
+from Project_data_processor_ML import clean_index, label_encoding, replace_owner_str_with_average_number, \
+    genre_data_aggregation
 from dash_plot_generation.styles_and_handles import SPACE_NORMAL_ENTRY
 
 DEFAULT_ILLEGAL_CONTINUATIONS = {"INC.", "LLC", "CO.", "LTD.", "S.R.O."}
@@ -72,13 +75,11 @@ def split_companies(arr, illegal_continuations: Optional[Sequence[str]] = None):
 
 
 def extract_unique_companies(nested_companies):
-    full_company_list = [dev for company_list in nested_companies
-                         if isinstance(company_list, list) for dev in company_list]
-    unique_companies = []
-    for company in full_company_list:
-        if company not in unique_companies:
-            unique_companies.append(company)
-    return unique_companies
+    flat_array = np.array(
+        [company for company_list in nested_companies if isinstance(company_list, list) for company in company_list])
+    _, idx = np.unique(flat_array, return_index=True)
+    unique_companies = flat_array[np.sort(idx)]
+    return unique_companies.tolist()
 
 
 def replace_owner_number_with_symbol(df):
@@ -186,28 +187,27 @@ def get_ccu_str(data):
 
 def get_genre_popularity_counts(df, group_after_largest=8):
     genre_df = df[["genres", "owner_means", "game_revenue"]]
-    genre_owners = {}
-    genre_revenue = {}
 
-    for index, row in genre_df.iterrows():
-        if not isinstance(row.genres, str):
-            continue
-        genre_list = row.genres.split(", ")
-        for genre in genre_list:
-            if genre in genre_owners.keys():
-                genre_owners[genre] += row["owner_means"]
-                genre_revenue[genre] += row["game_revenue"]
-            else:
-                genre_owners[genre] = row["owner_means"]
-                genre_revenue[genre] = row["game_revenue"]
-    top_owners = dict(Counter(genre_owners).most_common(group_after_largest))
-    top_revenue = dict(Counter(genre_revenue).most_common(group_after_largest))
-    top_owners["Other"] = sum([val for (key, val) in genre_owners.items()
-                               if key not in top_owners.keys()])
-    top_revenue["Other"] = sum([val for (key, val) in genre_revenue.items()
-                                if key not in top_revenue.keys()])
+    genre_df = genre_df.dropna(subset=["genres"])
+    genre_df["genres"] = genre_df["genres"].str.split(", ")
 
-    return top_owners, top_revenue
+    # Give the genres a separate rwo for each genre
+    genre_df = genre_df.explode("genres")
+    grouped = genre_df.groupby("genres").agg({"owner_means": "sum", "game_revenue": "sum"})
+
+    # Get top values in dfs
+    top_owners = grouped.sort_values(by="owner_means", ascending=False).head(group_after_largest)
+    top_revenue = grouped.sort_values(by="game_revenue", ascending=False).head(group_after_largest)
+
+    # Sum the values of the remaining genres
+    other_owners = grouped.loc[~grouped.index.isin(top_owners.index)].sum()
+    other_revenue = grouped.loc[~grouped.index.isin(top_revenue.index)].sum()
+
+    # Add the rest into same column
+    top_owners.loc["Other"] = other_owners
+    top_revenue.loc["Other"] = other_revenue
+
+    return top_owners["owner_means"].to_dict(), top_revenue["game_revenue"].to_dict()
 
 
 def get_average_game_rev_label(data, space_amount: int = SPACE_NORMAL_ENTRY, add_point: bool = True):
@@ -221,15 +221,8 @@ def get_average_game_rev_label(data, space_amount: int = SPACE_NORMAL_ENTRY, add
 
 
 def get_all_genres(df):
-    unique_genres = set()
-    try:
-        for index, row in df.iterrows():
-            if not isinstance(row.genres, str):
-                continue
-            fully_split = row.genres.split(", ")
-            unique_genres.update(fully_split)
-    except Exception as ex:
-        pass
+    genres_column = df['genres'].dropna().values
+    unique_genres = set(np.concatenate([genres.split(", ") for genres in genres_column]))
     return unique_genres
 
 
@@ -242,3 +235,73 @@ def get_cumulative_owner_game_count_limits_for_dev_and_pub(df):
     max_owner_pub = owner_cum_sums_pub.iloc[0]
     return {"developer": {"min": min_owner_dev, "max": max_owner_dev},
             "publisher": {"min": min_owner_pub, "max": max_owner_pub}}
+
+
+def save_owner_ranges_to_file(dataframe, file_name):
+    # Get sorted owner list
+    owner_ranges = {value_range for value_range in dataframe["owners"].unique()}
+
+    ranges_test = [(convert_owners_to_limits(value_range), value_range.split(" .. ")) for value_range in owner_ranges]
+    unique_owner_values = {(limits[i], limits_str[i]) for (limits, limits_str)
+                           in ranges_test for i in range(2)}
+    sorted_owner_list = sorted(unique_owner_values, key=lambda range: range[0])
+
+    with open(file_name, "wb") as fp:
+        pickle.dump(sorted_owner_list, fp)
+
+
+def load_owner_ranges_to_list(file_name):
+    with open(file_name, "rb") as fp:
+        sorted_owner_list = pickle.load(fp)
+    return sorted_owner_list
+
+
+def save_label_encoded_data_to_file(dataframe, filepath):
+    data, _ = setup_label_encoded_data(dataframe)
+    with open(filepath, "wb") as fp:
+        pickle.dump(data, fp)
+
+
+def load_label_encoded_data(filepath):
+    with open(filepath, "rb") as fp:
+        df = pickle.load(fp)
+    return df
+
+
+def setup_label_encoded_data(data: pandas.DataFrame):
+    data_copy = data.copy()
+    full_data_df = clean_index(data_copy)
+    label_encoding(full_data_df)
+    full_data_df = replace_owner_str_with_average_number(full_data_df)
+    owners_genre_data, number_genre_data = genre_data_aggregation(full_data_df, 2)
+    return owners_genre_data, number_genre_data
+
+
+def save_genres_to_file(dataframe, filepath):
+    # Get unique_genres
+    unique_genres = get_all_genres(dataframe)
+    with open(filepath, "wb") as fp:
+        pickle.dump(unique_genres, fp)
+
+
+def load_genres(filepath):
+    with open(filepath, "rb") as fp:
+        genre_list = pickle.load(fp)
+    return genre_list
+
+
+def save_company_name_lists(dataframe, file_name_dev, file_name_pub):
+    unique_publishers = extract_unique_companies(dataframe["publisher"].apply(lambda x: split_companies(x)))
+    unique_developers = extract_unique_companies(dataframe["developer"].apply(lambda x: split_companies(x)))
+    with open(file_name_dev, "wb") as fp:
+        pickle.dump(unique_publishers, fp)
+    with open(file_name_pub, "wb") as fp:
+        pickle.dump(unique_developers, fp)
+
+
+def load_company_names(file_name_dev, file_name_pub):
+    with open(file_name_dev, "rb") as fp:
+        developer_list = pickle.load(fp)
+    with open(file_name_pub, "rb") as fp:
+        publisher_list = pickle.load(fp)
+    return developer_list, publisher_list
