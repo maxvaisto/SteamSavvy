@@ -83,3 +83,6 @@ DEVELOPER_LIST_PATH = os.path.join(PRECALCULATED_DATA_PATH, "developer_list")
 PUBLISHER_LIST_PATH = os.path.join(PRECALCULATED_DATA_PATH, "publisher_list")
 FACTORIZED_GAME_DATAFRAME_PATH = os.path.join(PRECALCULATED_DATA_PATH, "encoded_game_dataframe")
 GENRE_LIST_PATH = os.path.join(PRECALCULATED_DATA_PATH, "genre_list")
+MAIN_DATAFRAME_PATH = os.path.join(PRECALCULATED_DATA_PATH, "main_dataframe")
+GAME_POPULARITY_FILTERS_PATH = os.path.join(PRECALCULATED_DATA_PATH, "game_popularity_filters")
+

@@ -10,7 +10,7 @@ from dash import html
 
 from Project_data_processor_ML import clean_index, label_encoding, replace_owner_str_with_average_number, \
     genre_data_aggregation
-from dash_plot_generation.styles_and_handles import SPACE_NORMAL_ENTRY
+from dash_plot_generation.styles_and_handles import SPACE_NORMAL_ENTRY, WHITE_STEAM
 
 DEFAULT_ILLEGAL_CONTINUATIONS = {"INC.", "LLC", "CO.", "LTD.", "S.R.O."}
 
@@ -111,7 +111,7 @@ def convert_to_numeric_str(value, **kwargs):
 
 
 def label_with_rev(label, rev, space, char=".", currency_symbol=""):
-    processed_rev = convert_to_numeric_str(int(rev))
+    processed_rev = convert_to_numeric_str(int(rev)) if not numpy.isnan(rev) else "0"
     return_val = label_with_text(label, "".join([currency_symbol, processed_rev]), space, char)
     return return_val
 
@@ -128,14 +128,14 @@ def round_to_three_largest_digits(number, accuracy=2):
     return return_val
 
 
-def get_average_user_rating_label(dev_data, space_amount: int = SPACE_NORMAL_ENTRY):
-    value_str = str(round(100 * dev_data["Review_rating"].mean())) + "%"
+def get_average_user_rating_label(company_data: pandas.DataFrame, space_amount: int = SPACE_NORMAL_ENTRY):
+    value_str = str(round(100 * company_data["Review_rating"].mean())) + "%"
     label = label_with_text("Average game rating", value_str, space_amount, ".")
     return label
 
 
-def get_game_count_label(dev_data, space_amount: int = SPACE_NORMAL_ENTRY):
-    return label_with_text("Number of games", str(dev_data.shape[0]), space_amount, ".")
+def get_game_count_label(company_data: pandas.DataFrame, space_amount: int = SPACE_NORMAL_ENTRY):
+    return label_with_text("Number of games", str(company_data.shape[0]), space_amount, ".")
 
 
 def get_top_revenue_game_labels(data):
@@ -211,12 +211,19 @@ def get_genre_popularity_counts(df, group_after_largest=8):
 
 
 def get_average_game_rev_label(data, space_amount: int = SPACE_NORMAL_ENTRY, add_point: bool = True):
-    game_revenue_per_game_raw = numpy.nansum(data["game_revenue"]) / len(data["game_revenue"])
-    dev_game_revenue_per_game_row = label_with_rev("Average", game_revenue_per_game_raw,
-                                                   space_amount, ".", "$")
+    game_revenue = data["game_revenue"]
+
+    # Check if the game_revenue list contains only NaN values
+    if all(numpy.isnan(game_revenue)):
+        game_revenue = [0.0] * len(game_revenue)  # Replace all NaN values with zeros
+
+    # Calculate the average
+    game_revenue_per_game_raw = numpy.nanmean(game_revenue)
+    dev_game_revenue_per_game_row = label_with_rev("Average", game_revenue_per_game_raw, space_amount, ".", "$")
 
     dev_game_revenue_per_game = " ".join(["•", dev_game_revenue_per_game_row]) if add_point \
         else dev_game_revenue_per_game_row
+
     return dev_game_revenue_per_game
 
 
@@ -237,7 +244,7 @@ def get_cumulative_owner_game_count_limits_for_dev_and_pub(df):
             "publisher": {"min": min_owner_pub, "max": max_owner_pub}}
 
 
-def save_owner_ranges_to_file(dataframe, file_name):
+def save_owner_ranges_to_file(dataframe, filepath):
     # Get sorted owner list
     owner_ranges = {value_range for value_range in dataframe["owners"].unique()}
 
@@ -246,26 +253,20 @@ def save_owner_ranges_to_file(dataframe, file_name):
                            in ranges_test for i in range(2)}
     sorted_owner_list = sorted(unique_owner_values, key=lambda range: range[0])
 
-    with open(file_name, "wb") as fp:
-        pickle.dump(sorted_owner_list, fp)
+    save_object_to_file(sorted_owner_list, filepath)
 
 
-def load_owner_ranges_to_list(file_name):
-    with open(file_name, "rb") as fp:
-        sorted_owner_list = pickle.load(fp)
-    return sorted_owner_list
+def load_owner_ranges_to_list(filepath):
+    return load_object_from_file(filepath)
 
 
 def save_label_encoded_data_to_file(dataframe, filepath):
     data, _ = setup_label_encoded_data(dataframe)
-    with open(filepath, "wb") as fp:
-        pickle.dump(data, fp)
+    save_object_to_file(data, filepath)
 
 
 def load_label_encoded_data(filepath):
-    with open(filepath, "rb") as fp:
-        df = pickle.load(fp)
-    return df
+    return load_object_from_file(filepath)
 
 
 def setup_label_encoded_data(data: pandas.DataFrame):
@@ -280,28 +281,61 @@ def setup_label_encoded_data(data: pandas.DataFrame):
 def save_genres_to_file(dataframe, filepath):
     # Get unique_genres
     unique_genres = get_all_genres(dataframe)
-    with open(filepath, "wb") as fp:
-        pickle.dump(unique_genres, fp)
+    save_object_to_file(unique_genres, filepath)
 
 
 def load_genres(filepath):
-    with open(filepath, "rb") as fp:
-        genre_list = pickle.load(fp)
-    return genre_list
+    return load_object_from_file(filepath)
 
 
-def save_company_name_lists(dataframe, file_name_dev, file_name_pub):
+def save_company_name_lists(dataframe, file_name_dev, file_name_pub, add_labels=False):
     unique_publishers = extract_unique_companies(dataframe["publisher"].apply(lambda x: split_companies(x)))
     unique_developers = extract_unique_companies(dataframe["developer"].apply(lambda x: split_companies(x)))
-    with open(file_name_dev, "wb") as fp:
-        pickle.dump(unique_publishers, fp)
-    with open(file_name_pub, "wb") as fp:
-        pickle.dump(unique_developers, fp)
+    if add_labels:
+        developer_labels = [{"label": html.Span([developer], style={'color': WHITE_STEAM}),
+                             "value": developer} for developer in unique_developers]
+        publisher_labels = [{"label": html.Span([publisher], style={'color': WHITE_STEAM}),
+                             "value": publisher} for publisher in
+                            unique_publishers]
+        save_object_to_file(developer_labels, file_name_dev + "_labels")
+        save_object_to_file(publisher_labels, file_name_pub + "_labels")
+
+    save_object_to_file(unique_publishers, file_name_pub)
+    save_object_to_file(unique_developers, file_name_dev)
 
 
 def load_company_names(file_name_dev, file_name_pub):
-    with open(file_name_dev, "rb") as fp:
-        developer_list = pickle.load(fp)
-    with open(file_name_pub, "rb") as fp:
-        publisher_list = pickle.load(fp)
-    return developer_list, publisher_list
+    return load_object_from_file(file_name_dev), load_object_from_file(file_name_pub)
+
+
+def load_company_name_labels(file_name_dev, file_name_pub):
+    return load_object_from_file(file_name_dev), load_object_from_file(file_name_pub)
+
+
+def save_object_to_file(object, file_path):
+    with open(file_path, "wb") as fp:
+        pickle.dump(object, fp)
+
+
+def load_object_from_file(file_path):
+    with open(file_path, "rb") as fp:
+        object = pickle.load(fp)
+    return object
+
+
+def save_game_popularity_filter_data_to_file(dataframe, owner_range_parts, filepath):
+    # Calculate max_reviews
+    max_reviews = np.nanmax(dataframe.apply(lambda x: x["positive"] + x["negative"], axis=1))
+    # Calculate owner_range_dict
+    owner_range_dict = {index: val_str for (index, (val, val_str)) in enumerate(owner_range_parts)}
+    min_owner = min(owner_range_dict.keys())
+    max_owner = max(owner_range_dict.keys())
+
+    # Create a dictionary to store the calculated values
+    data_to_save = {
+        "max_reviews": max_reviews,
+        "owner_range_dict": owner_range_dict,
+        "min_owner": min_owner,
+        "max_owner": max_owner
+    }
+    save_object_to_file(data_to_save, filepath)
