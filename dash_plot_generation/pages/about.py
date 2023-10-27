@@ -12,30 +12,32 @@ layout = html.Div([
         html.Div(
             className="w-layout-blockcontainer container-5 w-container",
             children=[
-                html.P(["SteamSavvy started as a simple project for a data science course: analyze and present the results "
-                       "in a simple manner. However, the project blossomed into a full-blown dashboard with a "
-                       "handmade UI, and style components.",
-                       html.Br(),
-                       html.Br(),
-                       "The core idea behind the project has always remained the "
-                       "same: to utilize Steam gaming platform data to provide insightful information to users, "
-                       "offering practical insights into the gaming industry. Whether you're an investor, developer, "
-                       "marketer, or stakeholder, the challenge is the same - how do you make sense of the wealth of "
-                       "available data? Which metrics truly matter? Where do you even begin?",
-                       html.Br(),
-                       html.Br(),
-                       "That's where our project "
-                       "comes in. We recognized the need for a straightforward analytics tool tailored for the video "
-                       "game industry, with a focus on platforms like Steam, a major player in the PC gaming market."],
+                html.P([
+                           "SteamSavvy started as a simple project for a data science course: analyze and present the results "
+                           "in a simple manner. However, the project blossomed into a full-blown dashboard with a "
+                           "handmade UI, and style components.",
+                           html.Br(),
+                           html.Br(),
+                           "The core idea behind the project has always remained the "
+                           "same: to utilize Steam gaming platform data to provide insightful information to users, "
+                           "offering practical insights into the gaming industry. Whether you're an investor, developer, "
+                           "marketer, or stakeholder, the challenge is the same - how do you make sense of the wealth of "
+                           "available data? Which metrics truly matter? Where do you even begin?",
+                           html.Br(),
+                           html.Br(),
+                           "That's where our project "
+                           "comes in. We recognized the need for a straightforward analytics tool tailored for the "
+                           "video"
+                           "game industry, with a focus on platforms like Steam, a major player in the PC gaming market."],
                        className="paragraph"),
-                html.H3("Our Approach & Why steam"),
+                html.H3("Our Approach & Why Steam"),
                 html.P(["Steam, with its extensive library of over 50,000 games and 45,000 developers, is a central "
-                       "hub in the gaming distribution world. It's a treasure trove of data, including game revenues, "
-                       "ownership statistics, and player reviews.",
-                       html.Br(),
-                       html.Br(),
-                       "Our approach revolves around two core elements:"],
-                       className="paragraph", style={"margin-bottom":"50px"}),
+                        "hub in the gaming distribution world. It's a treasure trove of data, including game revenues, "
+                        "ownership statistics, and player reviews.",
+                        html.Br(),
+                        html.Br(),
+                        "Our approach revolves around two core elements:"],
+                       className="paragraph", style={"margin-bottom": "50px"}),
                 html.Div(className="w-layout-blockcontainer w-container side-listing",
                          children=[
                              html.Div(className="w-layout-blockcontainer w-container small_listing",
@@ -83,7 +85,7 @@ layout = html.Div([
                                                                                                   "Master's Student",
                                                                                                   html.Br(),
                                                                                                   "University "
-                                                                                                 "of Helsinki"]),
+                                                                                                  "of Helsinki"]),
                                                html.A(
                                                    html.Img(alt="",
                                                             src="assets/team/logo.png",
@@ -105,7 +107,7 @@ layout = html.Div([
                                                                                                   "Master's Student",
                                                                                                   html.Br(),
                                                                                                   "University "
-                                                                                                 "of Helsinki"]),
+                                                                                                  "of Helsinki"]),
 
                                                html.A(
                                                    html.Img(alt="",
@@ -118,8 +120,8 @@ layout = html.Div([
                                   html.Div(className="w-layout-blockcontainer w-container team-card",
                                            children=[
                                                html.A(
-                                               html.Img(className="team-member-image", alt="",
-                                                        src="assets/team/Max_V.jpg"),
+                                                   html.Img(className="team-member-image", alt="",
+                                                            src="assets/team/Max_V.jpg"),
                                                    href="https://www.linkedin.com/in/max-v%C3%A4ist%C3%B6-2985a9263/",
                                                    target="_blank"
                                                ),
@@ -128,12 +130,12 @@ layout = html.Div([
                                                                                                   "Master's Student",
                                                                                                   html.Br(),
                                                                                                   "University "
-                                                                                                 "of Helsinki"]),
+                                                                                                  "of Helsinki"]),
 
                                                html.A(
-                                               html.Img(alt="",
-                                                        src="assets/team/logo.png",
-                                                        sizes="40px", width="40", height=""),
+                                                   html.Img(alt="",
+                                                            src="assets/team/logo.png",
+                                                            sizes="40px", width="40", height=""),
                                                    href="https://www.linkedin.com/in/max-v%C3%A4ist%C3%B6-2985a9263/",
                                                    target="_blank"
                                                ),
