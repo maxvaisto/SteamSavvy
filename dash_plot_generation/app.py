@@ -32,7 +32,7 @@ app = dash.Dash(
 server = app.server
 app.layout = html.Div([
     html.Nav(className="navbar", children=[
-        html.A("SteamSavvy - Steam game data insights", href="/",
+        html.A("SteamSavvy - Steam Game Data Insights", href="/",
                style={"margin-left": "60px", "display": "inline-block"},
                className="nav-item-1"),
         html.A('About', className="nav-item nav-link btn", href='/about',

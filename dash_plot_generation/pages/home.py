@@ -11,20 +11,19 @@ layout = html.Div(
                 className="heading-1"),
         html.H3("Steam API data analysis dashboard.",
                 className="heading-3"),
-        # html.H4('Discover the full potential of steam data for market analysis.', className="heading-3"),
         html.Div(
             children=[
                 html.Div(
                     children=[
                         html.A("Dashboard", className="heading-4", href="/dashboard"),
-                        html.P("Discover market trends on Steam", className="sub-text")
+                        html.H5("Discover market trends on Steam", className="sub-text")
                     ],
                     className="container-3"
                 ),
                 html.Div(
                     children=[
                         html.A("About", className="heading-4", href="/about"),
-                        html.P("Learn more about the website", className="sub-text")
+                        html.H5("Learn more about the website", className="sub-text")
                     ],
                     className="container-3"
                 ),
@@ -33,7 +32,7 @@ layout = html.Div(
                         html.A('Technical report',
                                className="heading-4", href="",
                                download='dark city.jpg', target="_blank",),
-                        html.P("Read the project documentation", className="sub-text")
+                        html.H5("Read the project documentation", className="sub-text")
                     ],
                     className="container-3"
                 )
