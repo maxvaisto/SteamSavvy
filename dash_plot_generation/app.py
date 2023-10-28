@@ -1,12 +1,14 @@
 import dash
 import numpy
+import numpy as np
 import pandas
 from dash import html, dash, Output, Input, dcc
 from dash.exceptions import PreventUpdate
-
+import datetime as dt
 import dash_plot_generation.data_store as ds
 ds.initialize_data()
-from Project_data_processor_ML import get_genre_plot
+from Project_data_processor_ML import get_genre_plot, perform_regression_analysis_on_data, get_data_interval, \
+    get_genre_plot_full
 from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_SLIDER, RATING_TABLE, \
     DEV_AVERAGE_RATING_LABEL, DENSITY_LAYOUT_STYLE, WHITE_STEAM, TAB_COLOR, TAB_EDGE, \
     TAB_HEADER_COLOR, DEVELOPER_DROPDOWN, DEV_TOP_GENRES_LABEL, DEV_CCU_LABEL, DEV_GAME_COUNT_LABEL, \
@@ -14,10 +16,11 @@ from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_S
     GENRE_PREDICTION_GRAPH, GENRE_DROPDOWN, DEFAULT_PLOT_STYLE_DICT, GAMES_BY_DEV_GRAPH, MARKET_PERFORMANCE_SCATTER, \
     MP_COMPANY_TYPE_DROPDOWN, create_market_scatter_plot_style, REVENUE_COMPANY_GAME_COUNT, PUB_REVENUE_LABEL, \
     PUB_TOP_GENRES_LABEL, PUB_CCU_LABEL, PUB_GAME_COUNT_LABEL, PUB_REV_PER_GAME_LABEL, PUB_TOP_GAMES, \
-    PUB_AVERAGE_RATING_LABEL, PUBLISHER_DROPDOWN, GAMES_BY_PUB_GRAPH, TOP_COMPANY_TABLE_AREA, TOP_REVENUE_COMPANIES
+    PUB_AVERAGE_RATING_LABEL, PUBLISHER_DROPDOWN, GAMES_BY_PUB_GRAPH, TOP_COMPANY_TABLE_AREA, TOP_REVENUE_COMPANIES, \
+    OWNER_PREDICTIONS_PATH, OWNER_LINES_PATH
 from dash_plot_generation.utils import get_average_user_rating_label, get_game_count_label, get_top_revenue_game_labels, \
     get_total_revenue_label, get_top_genre_labels, get_ccu_label, get_average_game_rev_label, get_ccu_str, \
-    get_top_revenue_game_names, convert_to_numeric_str
+    get_top_revenue_game_names, convert_to_numeric_str, load_object_from_file
 from visual_presentation.Annual_release_games import get_game_release_figure
 from visual_presentation.Distribution_of_review_rating import get_rating_density_plot
 from visual_presentation.Market_performance_function import plot_market_performance
@@ -177,7 +180,13 @@ def get_genre_prediction_table(genre, **kwargs):
                         t=50, b=20)
 
         )
-    fig = get_genre_plot(ds.LABEL_ENCODED_DATASET, genre, **kwargs)
+    dates = np.array(get_data_interval(730))
+    dates = dates.reshape(len(dates), 1)
+    owner_predictions = load_object_from_file(OWNER_PREDICTIONS_PATH)
+    owner_lines = load_object_from_file(OWNER_LINES_PATH)
+    vectorized_from_ordinal = np.vectorize(dt.datetime.fromordinal)
+    dates = vectorized_from_ordinal(dates)
+    fig = get_genre_plot_full(ds.LABEL_ENCODED_DATASET, genre, owner_predictions, owner_lines, dates, **kwargs)
     return fig
 
 

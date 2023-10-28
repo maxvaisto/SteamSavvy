@@ -1,3 +1,4 @@
+import os
 import pickle
 import re
 from collections import Counter
@@ -9,8 +10,9 @@ import pandas
 from dash import html
 
 from Project_data_processor_ML import clean_index, label_encoding, replace_owner_str_with_average_number, \
-    genre_data_aggregation
+    genre_data_aggregation, data_processing, read_data, get_data_interval, perform_regression_analysis_on_data
 from dash_plot_generation.styles_and_handles import SPACE_NORMAL_ENTRY, WHITE_STEAM
+import datetime as dt
 
 DEFAULT_ILLEGAL_CONTINUATIONS = {"INC.", "LLC", "CO.", "LTD.", "S.R.O."}
 
@@ -260,22 +262,39 @@ def load_owner_ranges_to_list(filepath):
     return load_object_from_file(filepath)
 
 
-def save_label_encoded_data_to_file(dataframe, filepath):
-    data, _ = setup_label_encoded_data(dataframe)
-    save_object_to_file(data, filepath)
+def save_object_to_file(data, data_filepath):
+    pass
+
+
+def save_label_encoded_data_to_file(data_filepath, owner_predictions_filepath,
+                                    owner_lines_filepath):
+    data, _, _, owner_predictions, owner_lines = setup_label_encoded_data()
+
+    save_object_to_file(data, data_filepath)
+    save_object_to_file(owner_predictions, owner_predictions_filepath)
+    save_object_to_file(owner_lines, owner_lines_filepath)
+
 
 
 def load_label_encoded_data(filepath):
     return load_object_from_file(filepath)
 
 
-def setup_label_encoded_data(data: pandas.DataFrame):
-    data_copy = data.copy()
-    full_data_df = clean_index(data_copy)
-    label_encoding(full_data_df)
-    full_data_df = replace_owner_str_with_average_number(full_data_df)
+def setup_label_encoded_data():
+    full_data_df = setup_main_dataframe()
+    full_data_df = data_processing(full_data_df)
     owners_genre_data, number_genre_data = genre_data_aggregation(full_data_df, 2)
-    return owners_genre_data, number_genre_data
+
+    # 730 days = 2 years
+    dates = np.array(get_data_interval(730))
+    dates = dates.reshape(len(dates), 1)
+
+    # GET ALL MODELS, PREDICTIONS AND SLOPE LINES FOR ALL GENRES
+    # Owner = owner count per period of time
+    # Number = number of games per period of time
+    owner_models, owner_predictions, owner_lines = perform_regression_analysis_on_data(owners_genre_data, dates)
+
+    return owners_genre_data, number_genre_data, owner_models, owner_predictions, owner_lines
 
 
 def save_genres_to_file(dataframe, filepath):
@@ -339,3 +358,22 @@ def save_game_popularity_filter_data_to_file(dataframe, owner_range_parts, filep
         "max_owner": max_owner
     }
     save_object_to_file(data_to_save, filepath)
+
+
+def setup_main_dataframe():
+    dataframe = None
+    for file in os.listdir(split_csv_path):
+        file_path = os.path.join(split_csv_path, file)
+        dataframe = pandas.concat([dataframe, pandas.read_csv(file_path)]) if dataframe is not None \
+            else pandas.read_csv(file_path)
+    return dataframe
+
+
+csv_path = os.path.normpath(os.getcwd() + os.sep + os.pardir + os.sep + "api_exploration")
+split_csv_path = os.path.join(csv_path, "file_segments")
+
+
+def setup_main_dataframe_full():
+    file_path = os.path.join(csv_path, "full_game_data.csv")
+    dataframe = pandas.read_csv(file_path, index_col=0)
+    return dataframe

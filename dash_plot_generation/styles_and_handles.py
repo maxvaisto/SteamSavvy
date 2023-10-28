@@ -85,4 +85,6 @@ FACTORIZED_GAME_DATAFRAME_PATH = os.path.join(PRECALCULATED_DATA_PATH, "encoded_
 GENRE_LIST_PATH = os.path.join(PRECALCULATED_DATA_PATH, "genre_list")
 MAIN_DATAFRAME_PATH = os.path.join(PRECALCULATED_DATA_PATH, "main_dataframe")
 GAME_POPULARITY_FILTERS_PATH = os.path.join(PRECALCULATED_DATA_PATH, "game_popularity_filters")
+OWNER_PREDICTIONS_PATH = os.path.join(PRECALCULATED_DATA_PATH, "owner_pedictions_ML")
+OWNER_LINES_PATH = os.path.join(PRECALCULATED_DATA_PATH, "owner_lines_ML")
 
