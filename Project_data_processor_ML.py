@@ -210,7 +210,7 @@ def get_genre_plot_full(dict_data: Dict[str, pd.DataFrame], target_genre: str, p
     Returns:
         A plotly figure with the given data
     """
-    actual_data = dict_data[target_genre]
+    actual_data = dict_data[target_genre].copy()
     actual_data["release_date"] = actual_data["release_date"].apply(
         lambda x: dt.datetime.fromordinal(x))
 
@@ -294,7 +294,7 @@ if __name__ == "__main__":
 
     owners_genre_data, number_genre_data = genre_data_aggregation(full_data_df, 2)
 
-    genre = "Action"
+    genre = "Audio Production"
 
     # 730 days = 2 years
     dates = np.array(get_data_interval(730))
