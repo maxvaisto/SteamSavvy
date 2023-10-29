@@ -87,4 +87,8 @@ MAIN_DATAFRAME_PATH = os.path.join(PRECALCULATED_DATA_PATH, "main_dataframe")
 GAME_POPULARITY_FILTERS_PATH = os.path.join(PRECALCULATED_DATA_PATH, "game_popularity_filters")
 OWNER_PREDICTIONS_PATH = os.path.join(PRECALCULATED_DATA_PATH, "owner_pedictions_ML")
 OWNER_LINES_PATH = os.path.join(PRECALCULATED_DATA_PATH, "owner_lines_ML")
+OPPORTUNITIES_PATH = os.path.join(PRECALCULATED_DATA_PATH, "opportunities_ML")
+AVERAGE_VALUE_PATH = os.path.join(PRECALCULATED_DATA_PATH, "average_value_ML")
+INTERPOLATED_COLORS_PATH = os.path.join(PRECALCULATED_DATA_PATH, "interpolated_colors_ML")
 
+ML_MAIN_GRAPH = "genre_ML_value_graph"

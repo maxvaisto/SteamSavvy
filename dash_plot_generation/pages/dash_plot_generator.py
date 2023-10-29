@@ -1,8 +1,4 @@
-import os
-import signal
-import sys
 from time import time
-import numpy
 import dash
 from dash import html, dcc
 from plotly import graph_objects as go
@@ -15,11 +11,12 @@ from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_S
     GAMES_BY_DEV_GRAPH, MARKET_PERFORMANCE_SCATTER, MP_COMPANY_TYPE_DROPDOWN, REVENUE_COMPANY_GAME_COUNT, \
     PUB_AVERAGE_RATING_LABEL, PUB_TOP_GENRES_LABEL, PUB_CCU_LABEL, PUB_GAME_COUNT_LABEL, PUB_TOP_GAMES, \
     PUB_REV_PER_GAME_LABEL, PUB_REVENUE_LABEL, GAMES_BY_PUB_GRAPH, PUBLISHER_DROPDOWN, TOP_REVENUE_COMPANIES, \
-    TOP_COMPANY_TABLE_AREA, GENRE_LIST_PATH, PUBLISHER_LIST_PATH, DEVELOPER_LIST_PATH, GAME_POPULARITY_FILTERS_PATH
+    TOP_COMPANY_TABLE_AREA, GENRE_LIST_PATH, PUBLISHER_LIST_PATH, DEVELOPER_LIST_PATH, GAME_POPULARITY_FILTERS_PATH, \
+    ML_MAIN_GRAPH
 
-from dash_plot_generation.utils import get_cumulative_owner_game_count_limits_for_dev_and_pub, get_all_genres, \
-    extract_unique_companies, split_companies, get_genre_popularity_counts, load_genres, load_company_names, \
-    load_object_from_file, load_company_name_labels
+from dash_plot_generation.utils import get_cumulative_owner_game_count_limits_for_dev_and_pub, \
+    get_genre_popularity_counts, load_genres, load_company_names, \
+    load_object_from_file
 
 # Record the start time
 start_time = time()
@@ -78,6 +75,7 @@ layout = html.Div(
                                                     html.Div(className="panel_division",
                                                              children=[
                                                                  dcc.Graph(
+                                                                     id=ML_MAIN_GRAPH,
                                                                      figure=go.Figure(data=[
                                                                          {'x': ["Action", "Adventure", "RPG", "Puzzle",
                                                                                 "Strategy"],
@@ -93,7 +91,7 @@ layout = html.Div(
                                                  exploitability of the specific game genre. The assessment 
                                                  is done by estimating the genre popularity, and games 
                                                  developed in the next two years and showing the relative 
-                                                 differences between the genres.""")]),
+                                                 differences between the genres.""", id="dud_text")]),
                                                     html.Div(className="small_panel",
                                                              style={'width': '35%', 'height': '100%',
                                                                     'background-color': TAB_COLOR},

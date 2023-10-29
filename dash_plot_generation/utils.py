@@ -10,7 +10,8 @@ import pandas
 from dash import html
 
 from Project_data_processor_ML import clean_index, label_encoding, replace_owner_str_with_average_number, \
-    genre_data_aggregation, data_processing, read_data, get_data_interval, perform_regression_analysis_on_data
+    genre_data_aggregation, data_processing, read_data, get_data_interval, perform_regression_analysis_on_data, \
+    get_opportunities, opportunity_transfrom, compute_interpolated_color
 from dash_plot_generation.styles_and_handles import SPACE_NORMAL_ENTRY, WHITE_STEAM
 import datetime as dt
 
@@ -266,14 +267,18 @@ def save_object_to_file(data, data_filepath):
     pass
 
 
-def save_label_encoded_data_to_file(data_filepath, owner_predictions_filepath,
-                                    owner_lines_filepath):
-    data, _, _, owner_predictions, owner_lines = setup_label_encoded_data()
+def save_label_encoded_data_to_file(owner_genre_data_filepath, owner_predictions_filepath,
+                                    owner_lines_filepath,
+                                    opportunities_filepath, average_value_filepath,
+                                    interpolated_colors_filepath):
+    data_dict = setup_label_encoded_data()
 
-    save_object_to_file(data, data_filepath)
-    save_object_to_file(owner_predictions, owner_predictions_filepath)
-    save_object_to_file(owner_lines, owner_lines_filepath)
-
+    save_object_to_file(data_dict["owners_genre_data"], owner_genre_data_filepath)
+    save_object_to_file(data_dict["owner_predictions"], owner_predictions_filepath)
+    save_object_to_file(data_dict["owner_lines"], owner_lines_filepath)
+    save_object_to_file(data_dict["opportunities"], opportunities_filepath)
+    save_object_to_file(data_dict["average_value"], average_value_filepath)
+    save_object_to_file(data_dict["interpolated_colors"], interpolated_colors_filepath)
 
 
 def load_label_encoded_data(filepath):
@@ -293,8 +298,25 @@ def setup_label_encoded_data():
     # Owner = owner count per period of time
     # Number = number of games per period of time
     owner_models, owner_predictions, owner_lines = perform_regression_analysis_on_data(owners_genre_data, dates)
+    number_models, number_predictions, number_lines = perform_regression_analysis_on_data(number_genre_data, dates)
+    opportunities = {x: get_opportunities(owner_models, number_models, x) for x in owner_predictions}
 
-    return owners_genre_data, number_genre_data, owner_models, owner_predictions, owner_lines
+    # plot opportunities
+    average_value, opportunities = opportunity_transfrom(opportunities)
+    interpolated_colors = [compute_interpolated_color(value, average_value, opportunities) for value in
+                           opportunities.values()]
+
+    result_dict = {
+        'owners_genre_data': owners_genre_data,
+        'number_genre_data': number_genre_data,
+        'owner_models': owner_models,
+        'owner_predictions': owner_predictions,
+        'owner_lines': owner_lines,
+        'opportunities': opportunities,
+        'average_value': average_value,
+        'interpolated_colors': interpolated_colors
+    }
+    return result_dict
 
 
 def save_genres_to_file(dataframe, filepath):
