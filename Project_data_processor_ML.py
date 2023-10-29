@@ -195,6 +195,48 @@ def get_genre_plot(dict_data: Dict[str, pd.DataFrame], genre: str, **figure_argu
     figure.update(**figure_arguments)
     return figure
 
+def get_genre_plot_full(dict_data: Dict[str, pd.DataFrame], target_genre: str, predictions: Dict[str, np.ndarray],
+                        lines: Dict[str, np.ndarray], dates_array: np.ndarray, **figure_arguments) -> go.Figure:
+    """
+
+    Args:
+        dict_data: A dictionary containing genre dataframes that have their date release date column as ordinal
+        target_genre: Genre to be plotted.
+        predictions: A dictionary with a series of prediction for every genre
+        lines: A linear regression line predic
+        dates_array:
+        **figure_arguments:
+
+    Returns:
+        A plotly figure with the given data
+    """
+    actual_data = dict_data[target_genre].copy()
+    actual_data["release_date"] = actual_data["release_date"].apply(
+        lambda x: dt.datetime.fromordinal(x))
+
+    # Convert the dates array to the proper format
+    clean_dates_array = dates_array.astype('datetime64[ns]').flatten()
+
+    figure = go.Figure()
+
+    # Add data points
+    figure.add_scatter(x=actual_data["release_date"], y=actual_data["owners"], mode='markers',
+                       name='Actual data points',
+                       marker=dict(color='#FF5733'))
+
+    # Add lr line
+    figure.add_scatter(x=actual_data["release_date"], y=lines[target_genre], mode='lines', name='Regression line',
+                       line=dict(color='red', width=2))
+
+    # Add predictions
+    figure.add_scatter(x=clean_dates_array, y=predictions[target_genre], mode='markers', name='Future Predictions',
+                       marker=dict(color='#33FF57'))
+
+    # Update the layout
+    figure.update_layout(title=f'{target_genre} Data Plot', xaxis_title='Release Date', yaxis_title='Owners')
+    figure.update(**figure_arguments)
+    return figure
+
 
 # This function congregates all machine learning algorithms, returns 3 dictionaries with models, predictions and slopes, all per genre
 def perform_regression_analysis_on_data(dict_data, dates):
