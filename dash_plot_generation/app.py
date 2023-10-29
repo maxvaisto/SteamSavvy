@@ -176,10 +176,9 @@ def update_density_filter_plot(rating_range, min_reviews, active_tab):
 def get_genre_performance_predection_figure(dud, **kwargs):
     if "layout" not in kwargs.keys():
         kwargs["layout"] = DEFAULT_PLOT_STYLE_DICT | dict(
-            title="Genre future prediction",
+            title="Predicted Opportunity Scores for Game Genres",
             margin=dict(l=20, r=20,
                         t=50, b=20)
-
         )
     interpolated_colors = load_object_from_file(INTERPOLATED_COLORS_PATH)
     opportunities = load_object_from_file(OPPORTUNITIES_PATH)
