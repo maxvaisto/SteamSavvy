@@ -6,9 +6,14 @@ from dash import html, dash, Output, Input, dcc
 from dash.exceptions import PreventUpdate
 import datetime as dt
 import dash_plot_generation.data_store as ds
-ds.initialize_data()
-from Project_data_processor_ML import get_genre_plot, perform_regression_analysis_on_data, get_data_interval, \
-    get_genre_plot_full
+
+from visual_presentation.Annual_release_games import get_game_release_figure
+from visual_presentation.Distribution_of_review_rating import get_rating_density_plot
+from visual_presentation.Market_performance_function import plot_market_performance
+from dash_plot_generation.utils import get_average_user_rating_label, get_game_count_label, get_top_revenue_game_labels, \
+    get_total_revenue_label, get_top_genre_labels, get_ccu_label, get_average_game_rev_label, get_ccu_str, \
+    get_top_revenue_game_names, convert_to_numeric_str, load_object_from_file
+from Project_data_processor_ML import get_data_interval, get_genre_plot_full
 from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_SLIDER, RATING_TABLE, \
     DEV_AVERAGE_RATING_LABEL, DENSITY_LAYOUT_STYLE, WHITE_STEAM, TAB_COLOR, TAB_EDGE, \
     TAB_HEADER_COLOR, DEVELOPER_DROPDOWN, DEV_TOP_GENRES_LABEL, DEV_CCU_LABEL, DEV_GAME_COUNT_LABEL, \
@@ -18,12 +23,9 @@ from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_S
     PUB_TOP_GENRES_LABEL, PUB_CCU_LABEL, PUB_GAME_COUNT_LABEL, PUB_REV_PER_GAME_LABEL, PUB_TOP_GAMES, \
     PUB_AVERAGE_RATING_LABEL, PUBLISHER_DROPDOWN, GAMES_BY_PUB_GRAPH, TOP_COMPANY_TABLE_AREA, TOP_REVENUE_COMPANIES, \
     OWNER_PREDICTIONS_PATH, OWNER_LINES_PATH
-from dash_plot_generation.utils import get_average_user_rating_label, get_game_count_label, get_top_revenue_game_labels, \
-    get_total_revenue_label, get_top_genre_labels, get_ccu_label, get_average_game_rev_label, get_ccu_str, \
-    get_top_revenue_game_names, convert_to_numeric_str, load_object_from_file
-from visual_presentation.Annual_release_games import get_game_release_figure
-from visual_presentation.Distribution_of_review_rating import get_rating_density_plot
-from visual_presentation.Market_performance_function import plot_market_performance
+
+ds.initialize_data()
+
 
 app = dash.Dash(
     name=__name__,
