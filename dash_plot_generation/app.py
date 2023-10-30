@@ -3,8 +3,12 @@ import numpy
 import numpy as np
 import pandas
 from dash import html, dash, Output, Input, dcc
+from dash.dcc import Download
 from dash.exceptions import PreventUpdate
 import datetime as dt
+
+from flask import send_file
+
 import dash_plot_generation.data_store as ds
 
 from visual_presentation.Annual_release_games import get_game_release_figure
@@ -22,7 +26,8 @@ from dash_plot_generation.styles_and_handles import RATING_MIN_REVIEWS, RATING_S
     MP_COMPANY_TYPE_DROPDOWN, create_market_scatter_plot_style, REVENUE_COMPANY_GAME_COUNT, PUB_REVENUE_LABEL, \
     PUB_TOP_GENRES_LABEL, PUB_CCU_LABEL, PUB_GAME_COUNT_LABEL, PUB_REV_PER_GAME_LABEL, PUB_TOP_GAMES, \
     PUB_AVERAGE_RATING_LABEL, PUBLISHER_DROPDOWN, GAMES_BY_PUB_GRAPH, TOP_COMPANY_TABLE_AREA, TOP_REVENUE_COMPANIES, \
-    OWNER_PREDICTIONS_PATH, OWNER_LINES_PATH, ML_MAIN_GRAPH, INTERPOLATED_COLORS_PATH, OPPORTUNITIES_PATH
+    OWNER_PREDICTIONS_PATH, OWNER_LINES_PATH, ML_MAIN_GRAPH, INTERPOLATED_COLORS_PATH, OPPORTUNITIES_PATH, \
+    DOWNLOAD_MAIN_PAGE
 
 ds.initialize_data()
 
@@ -43,8 +48,9 @@ app.layout = html.Div([
                style={"margin-left": "150px"}, ),
         html.A('Dashboard', className="nav-item nav-link btn", href='/dashboard',
                style={"margin-left": "150px"}),
+        # html.Div([html.Button("Download", id="btn"), dcc.Download(id="download")),
         html.A('Technical report', className="nav-item nav-link active btn",
-               href="", download='dark city.jpg', style={"margin-left": "150px"})
+               href=app.get_asset_url('Technical report.pdf'), download='Technical report.pdf', style={"margin-left": "150px"})
     ]),
 
     dash.page_container,
@@ -94,6 +100,23 @@ def update_dev_info(dev_name):
 
     return update_company_info(dev_data)
 
+
+@app.server.route("/download")
+def download_file():
+    # Define the file path and filename
+    file_path = 'assets/Technical report.pdf'
+    filename = 'Technical_report.pdf'
+
+    # Create a response object that sends the file for download
+    response = send_file(file_path, as_attachment=True, download_name=filename)
+    return response
+
+@app.callback(
+    Output(DOWNLOAD_MAIN_PAGE, "href"),
+    Input(DOWNLOAD_MAIN_PAGE, "n_clicks"),
+)
+def generate_download_link(n_clicks):
+    return "/download"
 
 @app.callback([Output(PUB_REVENUE_LABEL, "children"),
                Output(PUB_TOP_GENRES_LABEL, "children"),
@@ -182,7 +205,7 @@ def get_genre_performance_predection_figure(dud, **kwargs):
         )
     interpolated_colors = load_object_from_file(INTERPOLATED_COLORS_PATH)
     opportunities = load_object_from_file(OPPORTUNITIES_PATH)
-    fig = get_opportunity_plot(opportunities, interpolated_colors, **kwargs)
+    fig = get_opportunity_plot(opportunities=opportunities, colors=interpolated_colors, **kwargs)
     return fig
 
 

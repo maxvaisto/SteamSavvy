@@ -1,7 +1,9 @@
 import dash
-from dash import html
+from dash import html, dcc
 
+from dash_plot_generation.styles_and_handles import DOWNLOAD_MAIN_PAGE
 
+global app
 dash.register_page(__name__, path='/')
 
 layout = html.Div(
@@ -30,9 +32,8 @@ layout = html.Div(
                 html.Div(
                     children=[
                         html.A('Technical report',
-                               className="heading-4", href="",
-                               download='dark city.jpg', target="_blank",),
-                        html.H5("Read the project documentation", className="sub-text")
+                               className="heading-4", id=DOWNLOAD_MAIN_PAGE),
+                        html.H5("Read the project documentation", className="sub-text"),
                     ],
                     className="container-3"
                 )
